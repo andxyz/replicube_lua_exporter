@@ -14,7 +14,7 @@ type Puzzle struct {
 	ChallengeComplete bool              `json:"challenge_complete"`
 	CodeInstructions  float64           `json:"code_instructions"`
 	CodeSize          int               `json:"code_size"`
-	CodeVariants      map[string]string `json:"code_variants"` // e.g., {"code": "--[[ Lua comment here ]]-- Lua code goes here;"}
+	CodeVariants      map[string]string `json:"code_variants"` // e.g., {"code": "--[[ Lua comment here ]]-- return 1"}
 	Completed         bool              `json:"completed"`
 	FPS               int               `json:"fps"`
 	Frames            int               `json:"frames"`
@@ -45,7 +45,7 @@ func (p *parser) skipWhitespace() {
 	}
 }
 
-func (p *parser) parseValue() (interface{}, error) {
+func (p *parser) parseValue() (any, error) {
 	p.skipWhitespace()
 	if p.pos >= len(p.input) {
 		return nil, fmt.Errorf("unexpected end of input")
@@ -137,12 +137,12 @@ func (p *parser) parseNumber() (float64, error) {
 	return strconv.ParseFloat(s, 64)
 }
 
-func (p *parser) parseArray() ([]interface{}, error) {
+func (p *parser) parseArray() ([]any, error) {
 	if p.input[p.pos] != '[' {
 		return nil, fmt.Errorf("expected '[' at pos %d", p.pos)
 	}
 	p.pos++
-	var arr []interface{}
+	var arr []any
 	for {
 		p.skipWhitespace()
 		if p.pos < len(p.input) && p.input[p.pos] == ']' {
@@ -161,12 +161,12 @@ func (p *parser) parseArray() ([]interface{}, error) {
 	}
 }
 
-func (p *parser) parseObject() (map[string]interface{}, error) {
+func (p *parser) parseObject() (map[string]any, error) {
 	if p.input[p.pos] != '{' {
 		return nil, fmt.Errorf("expected '{' at pos %d", p.pos)
 	}
 	p.pos++
-	obj := make(map[string]interface{})
+	obj := make(map[string]any)
 	for {
 		p.skipWhitespace()
 		if p.pos < len(p.input) && p.input[p.pos] == '}' {
@@ -227,7 +227,7 @@ func ParseProgressFile(filePath string) (*PuzzlesData, error) {
 	}
 
 	for _, v := range val {
-		m, ok := v.(map[string]interface{})
+		m, ok := v.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -251,7 +251,7 @@ func ParseProgressFile(filePath string) (*PuzzlesData, error) {
 		if val, ok := m["code_size"].(float64); ok {
 			puzzle.CodeSize = int(val)
 		}
-		if variants, ok := m["code_variants"].(map[string]interface{}); ok {
+		if variants, ok := m["code_variants"].(map[string]any); ok {
 			for k, v := range variants {
 				if s, ok := v.(string); ok {
 					puzzle.CodeVariants[k] = s
@@ -276,7 +276,7 @@ func ParseProgressFile(filePath string) (*PuzzlesData, error) {
 		if val, ok := m["source"].(float64); ok {
 			puzzle.Source = int(val)
 		}
-		if orders, ok := m["variant_order"].([]interface{}); ok {
+		if orders, ok := m["variant_order"].([]any); ok {
 			for _, o := range orders {
 				if s, ok := o.(string); ok {
 					puzzle.VariantOrder = append(puzzle.VariantOrder, s)
