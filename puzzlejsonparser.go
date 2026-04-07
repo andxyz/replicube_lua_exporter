@@ -120,7 +120,7 @@ func sanitizeDirString(dirName string) string {
 	return dirName
 }
 
-func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte) error {
+func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) error {
 	var puzzlesData PuzzlesData
 	err := json.Unmarshal(jsonData, &puzzlesData)
 	if err != nil {
@@ -143,9 +143,14 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte) error {
 		}
 
 		cleanDirname := sanitizeDirString(lookedUpDirname)
-		err := os.MkdirAll(cleanDirname, 0755)
+		targetDir := cleanDirname
+		if outputDir != "" {
+			targetDir = fmt.Sprintf("%s/%s", outputDir, cleanDirname)
+		}
+
+		err := os.MkdirAll(targetDir, 0755)
 		if err != nil {
-			return fmt.Errorf("error creating directory %s: %w", cleanDirname, err)
+			return fmt.Errorf("error creating directory %s: %w", targetDir, err)
 		}
 
 		for i, codeTabName := range puzzle.VariantOrder {
@@ -154,7 +159,7 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte) error {
 			code := puzzle.CodeVariants[codeTabName]
 			fmt.Println(code)
 
-			filePath := fmt.Sprintf("%s/%s", cleanDirname, filename)
+			filePath := fmt.Sprintf("%s/%s", targetDir, filename)
 			err := os.WriteFile(filePath, []byte(code), 0644)
 			if err != nil {
 				return fmt.Errorf("error writing file %s: %w", filePath, err)
