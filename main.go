@@ -2,29 +2,52 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
-
-	"github.com/alecthomas/kong"
 )
 
-var CLI struct {
-	File   string `help:"Input progress.dat file path" name:"file" required:"" type:"path" short:"f"`
-	OutDir string `help:"Output directory for exported lua files and puzzles.json" name:"outdir" required:"" type:"path" short:"o"`
-}
-
 func main() {
-	kong.Parse(&CLI)
+	var progressFilePath string
+	var outputDir string
 
-	// Define input and output file paths
-	progressFilePath := CLI.File
-	outputDir := CLI.OutDir
+	flag.StringVar(&progressFilePath, "file", "", "Input progress.dat file path")
+	flag.StringVar(&progressFilePath, "f", "", "Input progress.dat file path (shorthand)")
+	flag.StringVar(&outputDir, "outdir", "", "Output directory for exported lua files and puzzles.json")
+	flag.StringVar(&outputDir, "o", "", "Output directory for exported lua files and puzzles.json (shorthand)")
+
+	flag.Parse()
+
+	if progressFilePath == "" || outputDir == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	// Validate input file path
+	fileInfo, err := os.Stat(progressFilePath)
+	if err != nil {
+		log.Fatalf("Error accessing input file '%s': %v", progressFilePath, err)
+	}
+	if fileInfo.IsDir() {
+		log.Fatalf("Error: input file '%s' is a directory", progressFilePath)
+	}
+
+	// Validate output directory path if it exists
+	outDirInfo, err := os.Stat(outputDir)
+	if err == nil {
+		if !outDirInfo.IsDir() {
+			log.Fatalf("Error: output path '%s' is a file, must be a directory", outputDir)
+		}
+	} else if !os.IsNotExist(err) {
+		log.Fatalf("Error checking output directory '%s': %v", outputDir, err)
+	}
+
 	outputJSONPath := filepath.Join(outputDir, "puzzles.json")
 
 	// Ensure output directory exists
-	err := os.MkdirAll(outputDir, 0755)
+	err = os.MkdirAll(outputDir, 0755)
 	if err != nil {
 		log.Fatalf("Error creating output directory '%s': %v", outputDir, err)
 	}
