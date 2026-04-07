@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -145,7 +146,7 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 		cleanDirname := sanitizeDirString(lookedUpDirname)
 		targetDir := cleanDirname
 		if outputDir != "" {
-			targetDir = fmt.Sprintf("%s/%s", outputDir, cleanDirname)
+			targetDir = filepath.Join(outputDir, cleanDirname)
 		}
 
 		err := os.MkdirAll(targetDir, 0755)
@@ -159,7 +160,7 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 			code := puzzle.CodeVariants[codeTabName]
 			fmt.Println(code)
 
-			filePath := fmt.Sprintf("%s/%s", targetDir, filename)
+			filePath := filepath.Join(targetDir, filename)
 			err := os.WriteFile(filePath, []byte(code), 0644)
 			if err != nil {
 				return fmt.Errorf("error writing file %s: %w", filePath, err)
