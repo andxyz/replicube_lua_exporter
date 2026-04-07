@@ -166,7 +166,7 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 				return fmt.Errorf("error writing file %s: %w", filePath, err)
 			}
 		}
-		fmt.Println("\nALLDONE")
+		fmt.Println()
 	}
 
 	return nil
