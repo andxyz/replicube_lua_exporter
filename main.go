@@ -74,6 +74,6 @@ func main() {
 		log.Fatalf("Error writing JSON to file '%s': %v", outputJSONPath, err)
 	}
 
-	successMessage := "Successfully exported puzzle data to " + outputJSONPath
+	successMessage := "Successfully exported puzzle data"
 	fmt.Println(successMessage)
 }
