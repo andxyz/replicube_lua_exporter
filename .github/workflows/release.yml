@@ -1,0 +1,70 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        goos: [linux, darwin, windows]
+        goarch: [amd64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26.1"
+          cache-dependency-path: go.sum
+
+      - name: Build
+        run: |
+          BINARY_NAME=replicube_lua_exporter
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            BINARY_NAME=${BINARY_NAME}.exe
+          fi
+          GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o ${BINARY_NAME} .
+
+      - name: Package
+        id: package
+        run: |
+          BINARY_NAME=replicube_lua_exporter
+          if [ "${{ matrix.goos }}" = "windows" ]; then
+            ASSET_NAME=replicube_lua_exporter-${{ matrix.goos }}-${{ matrix.goarch }}.zip
+            zip ${ASSET_NAME} ${BINARY_NAME}.exe README.md
+          else
+            ASSET_NAME=replicube_lua_exporter-${{ matrix.goos }}-${{ matrix.goarch }}.tar.gz
+            tar -czvf ${ASSET_NAME} ${BINARY_NAME} README.md
+          fi
+          echo "asset_name=${ASSET_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.asset_name }}
+          path: ${{ steps.package.outputs.asset_name }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
