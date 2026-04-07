@@ -22,5 +22,5 @@ mkdir replicube_solutions
 ```
 
 Notes: 
-- on my linux machine my save file was located at ~/.local/share/Replicube/progress.dat
-- on my windows machine my save file was located at %AppData%\Replicube\progress.dat
+- on my linux machine my save file was located at `~/.local/share/Replicube/progress.dat`
+- on my windows machine my save file was located at `%AppData%\Replicube\progress.dat`
