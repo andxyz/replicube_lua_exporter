@@ -24,6 +24,11 @@ func main() {
 		log.Fatalf("Error marshalling data to JSON: %v", err)
 	}
 
+	err = ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData)
+	if err != nil {
+		log.Fatalf("Error exporting directory contents: %v", err)
+	}
+
 	err = os.WriteFile(outputJSONPath, jsonData, 0644)
 	if err != nil {
 		log.Fatalf("Error writing JSON to file '%s': %v", outputJSONPath, err)
