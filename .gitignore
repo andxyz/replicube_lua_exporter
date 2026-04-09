@@ -1,3 +1,6 @@
 replicube_solutions*/*
+solutions*/*
 replicube_lua_exporter
-progress.dat
+*_progress.dat
+replicube_lua_exporter_rust*/**
+replicube_lua_exporter_rust/
