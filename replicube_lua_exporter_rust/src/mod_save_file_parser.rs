@@ -9,18 +9,18 @@ use std::fs;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Puzzle {
-    pub active_variant: String,
-    pub animated: bool,
-    pub challenge_complete: bool,
-    pub code_instructions: f64,
-    pub code_size: u32,
+    pub active_variant: Option<String>,
+    pub animated: Option<bool>,
+    pub challenge_complete: Option<bool>,
+    pub code_instructions: Option<f32>,
+    pub code_size: Option<i32>,
     pub code_variants: HashMap<String, String>,
-    pub completed: bool,
-    pub fps: u32,
-    pub frames: u32,
+    pub completed: Option<bool>,
+    pub fps: Option<i32>,
+    pub frames: Option<i32>,
     pub id: String,
-    pub size: u32,
-    pub source: u32,
+    pub size: Option<i32>,
+    pub source: Option<i32>,
     pub variant_order: Vec<String>,
 }
 
@@ -259,12 +259,8 @@ impl<'a> DataParser<'a> {
     pub(crate) fn parse_number(&mut self) -> Result<serde_json::Value> {
         let start = self.pos;
         let bytes = self.input.as_bytes();
-        let mut has_decimal_or_exp = false;
         while self.pos < bytes.len() {
             let c = bytes[self.pos];
-            if c == b'.' || c == b'e' || c == b'E' {
-                has_decimal_or_exp = true;
-            }
             if (c >= b'0' && c <= b'9')
                 || c == b'-'
                 || c == b'.'
@@ -279,21 +275,29 @@ impl<'a> DataParser<'a> {
         }
         let s = &self.input[start..self.pos];
 
-        if !has_decimal_or_exp {
-            if let Ok(n) = s.parse::<u64>() {
-                return Ok(serde_json::Value::Number(serde_json::Number::from(n)));
-            }
-            if let Ok(n) = s.parse::<i64>() {
-                return Ok(serde_json::Value::Number(serde_json::Number::from(n)));
-            }
+        // Try to parse as integer first
+        if let Ok(n) = s.parse::<u64>() {
+            return Ok(serde_json::Value::Number(n.into()));
+        }
+        if let Ok(n) = s.parse::<i64>() {
+            return Ok(serde_json::Value::Number(n.into()));
         }
 
+        // Fallback to float
         let n: f64 = s
             .parse()
             .with_context(|| format!("failed to parse number: {}", s))?;
+
+        // If it's effectively a whole number, convert it to an integer so serde_json
+        // can deserialize it into integer fields like u32.
+        if n.is_finite() && n.fract() == 0.0 {
+            return Ok(serde_json::Value::Number((n as i64).into()));
+        }
+
+        // If we can't parse as a number, return a default value
         Ok(serde_json::Number::from_f64(n)
             .map(serde_json::Value::Number)
-            .unwrap_or(serde_json::Value::Null))
+            .unwrap_or(serde_json::Value::default()))
     }
 
     pub(crate) fn parse_array(&mut self) -> Result<serde_json::Value> {

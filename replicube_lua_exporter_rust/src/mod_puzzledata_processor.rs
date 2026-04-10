@@ -7,13 +7,9 @@ pub(crate) fn process_and_create_files(
     parsed_puzzle_data: mod_save_file_parser::PuzzlesData,
 ) -> Result<(), anyhow::Error> {
     Ok(for puzzle in &parsed_puzzle_data.puzzles {
-        if puzzle.source != 100 {
+        if puzzle.source != Some(100) {
             continue;
         }
-
-        println!("#############");
-        println!("{}:", puzzle.id);
-        println!("#############");
 
         let looked_up_dirname =
             match mod_save_file_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str()) {
