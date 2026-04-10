@@ -1,3 +1,7 @@
+## Test data
+*_test_*/
+
+
 ## GOLANG GITIGNORE
 # sample progress files
 replicube_lua_exporter_golang/*_progress.dat
