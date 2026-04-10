@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -10,13 +9,19 @@ import (
 
 type SpecialNumber float64
 
-func (n SpecialNumber) MarshalJSON() ([]byte, error) {
-	var dupe_val float64 = float64(n)
-	if dupe_val == float64(math.Trunc(dupe_val)) {
-		return fmt.Appendf(nil, "%.1f", n), nil
-	} else {
-		return fmt.Appendf(nil, "%.5f", n), nil
+func FormatFloat(n float64) []byte {
+	// 'g' removes trailing zeros, -1 uses minimum digits needed
+	s := strconv.FormatFloat(n, 'g', -1, 64)
+
+	// If it doesn't have a decimal point, add .0
+	if !strings.Contains(s, ".") {
+		return []byte(s + ".0")
 	}
+	return []byte(s)
+}
+
+func (n SpecialNumber) MarshalJSON() ([]byte, error) {
+	return FormatFloat(float64(n)), nil
 }
 
 // Puzzle represents a single puzzle entry.

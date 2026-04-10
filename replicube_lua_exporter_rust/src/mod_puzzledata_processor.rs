@@ -7,7 +7,7 @@ pub(crate) fn process_and_create_files(
     parsed_puzzle_data: mod_save_file_parser::PuzzlesData,
 ) -> Result<(), anyhow::Error> {
     Ok(for puzzle in &parsed_puzzle_data.puzzles {
-        if puzzle.source != Some(100) {
+        if puzzle.source != 100 {
             continue;
         }
 

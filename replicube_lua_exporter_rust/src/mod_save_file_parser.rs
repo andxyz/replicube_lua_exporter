@@ -3,24 +3,43 @@ use anyhow::{Context, Result, anyhow};
 use once_cell::sync::Lazy;
 use phf::phf_map;
 use regex::Regex;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use std::fs;
 
+fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
+where
+    D: Deserializer<'de>,
+    T: Default + Deserialize<'de>,
+{
+    let opt = Option::deserialize(deserializer)?;
+    Ok(opt.unwrap_or_default())
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Puzzle {
-    pub active_variant: Option<String>,
-    pub animated: Option<bool>,
-    pub challenge_complete: Option<bool>,
-    pub code_instructions: Option<f32>,
-    pub code_size: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub active_variant: String,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub animated: bool,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub challenge_complete: bool,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub code_instructions: f32,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub code_size: i32,
     pub code_variants: HashMap<String, String>,
-    pub completed: Option<bool>,
-    pub fps: Option<i32>,
-    pub frames: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub completed: bool,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub fps: i32,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub frames: i32,
     pub id: String,
-    pub size: Option<i32>,
-    pub source: Option<i32>,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub size: i32,
+    #[serde(default, deserialize_with = "deserialize_null_default")]
+    pub source: i32,
     pub variant_order: Vec<String>,
 }
 
