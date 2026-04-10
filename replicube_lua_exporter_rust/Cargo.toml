@@ -1,6 +1,6 @@
 [package]
 name = "replicube_lua_exporter_rust"
-version = "1.0.1"
+version = "1.0.3"
 edition = "2024"
 
 [dependencies]
