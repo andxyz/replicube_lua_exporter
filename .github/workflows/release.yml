@@ -33,7 +33,7 @@ jobs:
           if [ "${{ matrix.goos }}" = "windows" ]; then
             BINARY_NAME=${BINARY_NAME}.exe
           fi
-          cd replicube_lua_exporter_golang && GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -v -o ../${BINARY_NAME} .
+          cd replicube_lua_exporter_golang && GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} go build -trimpath -ldflags="-s -w" -v -o ../${BINARY_NAME} .
 
       - name: Package
         id: package
