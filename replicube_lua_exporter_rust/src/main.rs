@@ -354,9 +354,9 @@ fn parse_progress_file(file_path: &Path) -> Result<PuzzlesData> {
     let json_str = &s[json_start..];
 
     let mut parser = DataParser::new(json_str);
-    let value = parser.parse_array()?;
+    let json_result = parser.parse_array()?;
 
-    let puzzles: Vec<Puzzle> = serde_json::from_value(value)
+    let puzzles: Vec<Puzzle> = serde_json::from_value(json_result)
         .with_context(|| "Failed to convert parsed value to Puzzle vector")?;
 
     Ok(PuzzlesData { puzzles })
