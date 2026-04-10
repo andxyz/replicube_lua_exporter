@@ -1,13 +1,12 @@
-use super::Args;
-use crate::puzzle_parser;
+use crate::mod_save_file_parser;
 use anyhow::{Context, Result};
-use std::fs;
+use std::{fs, path::PathBuf};
 
 pub(crate) fn process_and_create_files(
-    args: Args,
-    parsed_progress_data: puzzle_parser::PuzzlesData,
+    outdir: PathBuf,
+    parsed_puzzle_data: mod_save_file_parser::PuzzlesData,
 ) -> Result<(), anyhow::Error> {
-    Ok(for puzzle in &parsed_progress_data.puzzles {
+    Ok(for puzzle in &parsed_puzzle_data.puzzles {
         if (puzzle.source - 100.0).abs() > f64::EPSILON {
             continue;
         }
@@ -16,19 +15,20 @@ pub(crate) fn process_and_create_files(
         println!("{}:", puzzle.id);
         println!("#############");
 
-        let looked_up_dirname = match puzzle_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str()) {
-            Some(name) => name,
-            None => {
-                println!(
-                    "Warning: puzzle ID {} not found in lookup table, skipping",
-                    puzzle.id
-                );
-                continue;
-            }
-        };
+        let looked_up_dirname =
+            match mod_save_file_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str()) {
+                Some(name) => name,
+                None => {
+                    println!(
+                        "Warning: puzzle ID {} not found in lookup table, skipping",
+                        puzzle.id
+                    );
+                    continue;
+                }
+            };
 
-        let clean_dirname = puzzle_parser::sanitize_dir_string(looked_up_dirname);
-        let target_dir = args.outdir.join(clean_dirname);
+        let clean_dirname = mod_save_file_parser::sanitize_dir_string(looked_up_dirname);
+        let target_dir = outdir.join(clean_dirname);
 
         fs::create_dir_all(&target_dir)
             .with_context(|| format!("Error creating directory {:?}", target_dir))?;

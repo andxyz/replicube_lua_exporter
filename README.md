@@ -4,9 +4,11 @@
 This was a fun project. It helps me cleanly export the lua code I create in the game into some nicely named directories and files. 
 
 Download the latest version of the command line tool over here:
+
 - https://github.com/andxyz/replicube_lua_exporter/releases/latest
 
 For example, this little tool helped me share _my_ code over here:
+
 - https://github.com/andxyz/replicube_solutions
 
 The supplied download of the golang binary processes the replicube `progress.dat` (save file) from replicube

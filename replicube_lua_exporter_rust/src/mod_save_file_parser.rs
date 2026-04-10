@@ -1,4 +1,3 @@
-use super::Args;
 use super::PathBuf;
 use anyhow::{Context, Result, anyhow};
 use once_cell::sync::Lazy;
@@ -52,18 +51,6 @@ pub(crate) fn parse_progress_file(file_path: &PathBuf) -> Result<PuzzlesData> {
         .with_context(|| "Failed to convert parsed value to Puzzle vector")?;
 
     Ok(PuzzlesData { puzzles })
-}
-
-pub(crate) fn create_local_json_file(
-    args: &Args,
-    parsed_progress_data: &PuzzlesData,
-) -> Result<(), anyhow::Error> {
-    let json_data = serde_json::to_string_pretty(parsed_progress_data)
-        .with_context(|| "Error marshalling data to JSON")?;
-    let output_json_path = args.outdir.join("puzzles.json");
-    fs::write(&output_json_path, &json_data)
-        .with_context(|| format!("Error writing JSON to file '{:?}'", output_json_path))?;
-    Ok(())
 }
 
 pub(crate) static PROPER_DIRNAME_LOOKUP: phf::Map<&'static str, &'static str> = phf_map! {
