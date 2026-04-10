@@ -13,14 +13,14 @@ pub struct Puzzle {
     pub animated: bool,
     pub challenge_complete: bool,
     pub code_instructions: f64,
-    pub code_size: f64,
+    pub code_size: u32,
     pub code_variants: HashMap<String, String>,
     pub completed: bool,
-    pub fps: f64,
-    pub frames: f64,
+    pub fps: u32,
+    pub frames: u32,
     pub id: String,
-    pub size: f64,
-    pub source: f64,
+    pub size: u32,
+    pub source: u32,
     pub variant_order: Vec<String>,
 }
 
@@ -259,8 +259,12 @@ impl<'a> DataParser<'a> {
     pub(crate) fn parse_number(&mut self) -> Result<serde_json::Value> {
         let start = self.pos;
         let bytes = self.input.as_bytes();
+        let mut has_decimal_or_exp = false;
         while self.pos < bytes.len() {
             let c = bytes[self.pos];
+            if c == b'.' || c == b'e' || c == b'E' {
+                has_decimal_or_exp = true;
+            }
             if (c >= b'0' && c <= b'9')
                 || c == b'-'
                 || c == b'.'
@@ -274,6 +278,16 @@ impl<'a> DataParser<'a> {
             }
         }
         let s = &self.input[start..self.pos];
+
+        if !has_decimal_or_exp {
+            if let Ok(n) = s.parse::<u64>() {
+                return Ok(serde_json::Value::Number(serde_json::Number::from(n)));
+            }
+            if let Ok(n) = s.parse::<i64>() {
+                return Ok(serde_json::Value::Number(serde_json::Number::from(n)));
+            }
+        }
+
         let n: f64 = s
             .parse()
             .with_context(|| format!("failed to parse number: {}", s))?;

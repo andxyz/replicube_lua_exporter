@@ -53,13 +53,13 @@ func main() {
 	}
 
 	// Parse the progress.dat file for all the puzzles.
-	data, err := ParseProgressFile(progressFilePath)
+	puzzleData, err := ParseProgressFile(progressFilePath)
 	if err != nil {
 		log.Fatalf("Error parsing progress file '%s': %v", progressFilePath, err)
 	}
 
 	// Marshal the parsed data into JSON with indentation for readability.
-	jsonData, err := json.MarshalIndent(data, "", "  ")
+	jsonData, err := json.MarshalIndent(puzzleData, "", "  ")
 	if err != nil {
 		log.Fatalf("Error marshalling data to JSON: %v", err)
 	}
