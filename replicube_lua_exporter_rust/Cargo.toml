@@ -12,3 +12,11 @@ phf = { version = "0.13.1", features = ["macros"] }
 regex = "1.12.3"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+
+[profile.release]
+debug = 0           # This is the default in release, btw
+opt-level = "z"     # Optimize for size (z) or (s)
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce parallel code generation for better compression
+panic = "abort"     # Remove stack unwinding code
+strip = true        # Strip symbols and debug info
