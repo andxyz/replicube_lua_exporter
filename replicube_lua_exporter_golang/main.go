@@ -74,6 +74,9 @@ func main() {
 		log.Fatalf("Error writing JSON to file '%s': %v", outputJSONPath, err)
 	}
 
+	// If we need to debug, print out the JSON data
+	// fmt.Println(string(jsonData))
+
 	successMessage := "Successfully exported puzzle data"
 	fmt.Println(successMessage)
 }

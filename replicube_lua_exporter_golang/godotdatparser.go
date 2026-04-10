@@ -2,17 +2,29 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
 )
+
+type SpecialNumber float64
+
+func (n SpecialNumber) MarshalJSON() ([]byte, error) {
+	var dupe_val float64 = float64(n)
+	if dupe_val == float64(math.Trunc(dupe_val)) {
+		return fmt.Appendf(nil, "%.1f", n), nil
+	} else {
+		return fmt.Appendf(nil, "%.5f", n), nil
+	}
+}
 
 // Puzzle represents a single puzzle entry.
 type Puzzle struct {
 	ActiveVariant     string            `json:"active_variant"`
 	Animated          bool              `json:"animated"`
 	ChallengeComplete bool              `json:"challenge_complete"`
-	CodeInstructions  float64           `json:"code_instructions"`
+	CodeInstructions  SpecialNumber     `json:"code_instructions"`
 	CodeSize          int               `json:"code_size"`
 	CodeVariants      map[string]string `json:"code_variants"` // e.g., {"code": "--[[ Lua comment here ]]-- return 1"}
 	Completed         bool              `json:"completed"`
@@ -246,7 +258,7 @@ func ParseProgressFile(filePath string) (*PuzzlesData, error) {
 			puzzle.ChallengeComplete = val
 		}
 		if val, ok := m["code_instructions"].(float64); ok {
-			puzzle.CodeInstructions = val
+			puzzle.CodeInstructions = SpecialNumber(val)
 		}
 		if val, ok := m["code_size"].(float64); ok {
 			puzzle.CodeSize = int(val)
