@@ -3,10 +3,10 @@ use anyhow::{Context, Result};
 use std::{fs, path::PathBuf};
 
 pub(crate) fn process_and_create_files(
-    outdir: PathBuf,
-    parsed_puzzle_data: mod_save_file_parser::PuzzlesData,
+    outdir: &PathBuf,
+    parsed_puzzle_data: &mod_save_file_parser::PuzzlesData,
 ) -> Result<(), anyhow::Error> {
-    Ok(for puzzle in &parsed_puzzle_data.puzzles {
+    for puzzle in &parsed_puzzle_data.puzzles {
         if puzzle.source != 100 {
             continue;
         }
@@ -44,5 +44,6 @@ pub(crate) fn process_and_create_files(
                 .with_context(|| format!("Error writing file {:?}", file_path))?;
         }
         println!();
-    })
+    }
+    Ok(())
 }

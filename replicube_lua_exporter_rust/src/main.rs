@@ -48,7 +48,7 @@ fn main() -> Result<()> {
     // Create the local JSON file
     mod_json_outputfile_creator::create_local_json_file(&args.outdir, &parsed_progress_data)?;
     // Create the local dirs and lua files
-    mod_puzzledata_processor::process_and_create_files(args.outdir, parsed_progress_data)?;
+    mod_puzzledata_processor::process_and_create_files(&args.outdir, &parsed_progress_data)?;
 
     println!("Successfully exported puzzle data");
     Ok(())
