@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Allows us to control how the float is formatted in JSON output.
 type SpecialNumber float64
 
 func FormatFloat(n float64) []byte {
