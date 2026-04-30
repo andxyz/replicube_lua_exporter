@@ -34,16 +34,19 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 		fmt.Printf("%s:\n", puzzle.ID)
 		fmt.Println("#############")
 
-		lookedUpDirname, ok := properDirnameLookup[puzzle.ID]
+		lookedUp, ok := properLevelNameLookup[puzzle.ID]
+		lookedUpDirname := lookedUp[0]
+		lookedUpLevelName := lookedUp[1]
 		if !ok {
 			fmt.Printf("Warning: puzzle ID %s not found in lookup table, skipping\n", puzzle.ID)
 			continue
 		}
 
-		cleanDirname := sanitizeDirString(lookedUpDirname)
-		targetDir := cleanDirname
+		cleanDirname1 := sanitizeDirString(lookedUpDirname)
+		cleanDirname2 := sanitizeDirString(lookedUpLevelName)
+		targetDir := lookedUpLevelName
 		if outputDir != "" {
-			targetDir = filepath.Join(outputDir, cleanDirname)
+			targetDir = filepath.Join(outputDir, cleanDirname1, cleanDirname2)
 		}
 
 		err := os.MkdirAll(targetDir, 0755)
