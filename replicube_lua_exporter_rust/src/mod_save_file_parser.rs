@@ -1,11 +1,11 @@
 use super::PathBuf;
 use anyhow::{Context, Result, anyhow};
-use once_cell::sync::Lazy;
 use phf::phf_map;
 use regex::Regex;
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::LazyLock;
 
 fn deserialize_null_default<'de, D, T>(deserializer: D) -> Result<T, D::Error>
 where
@@ -375,8 +375,8 @@ impl<'a> DataParser<'a> {
 }
 
 pub(crate) fn sanitize_dir_string(dir_name: &str) -> String {
-    static REG1: Lazy<Regex> = Lazy::new(|| Regex::new(r"[^0-9A-Za-z_]").unwrap());
-    static REG2: Lazy<Regex> = Lazy::new(|| Regex::new(r"_+$").unwrap());
+    static REG1: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^0-9A-Za-z_]").unwrap());
+    static REG2: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"_+$").unwrap());
 
     let name = dir_name.replace(" ", "_");
     let name = REG1.replace_all(&name, "");
