@@ -378,7 +378,7 @@ pub(crate) fn sanitize_dir_string(dir_name: &str) -> String {
     static REG1: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[^0-9A-Za-z_]").unwrap());
     static REG2: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"_+$").unwrap());
 
-    let name = dir_name.replace(" ", "_");
+    let name = dir_name.replace(" ", "_").replace(".", "_");
     let name = REG1.replace_all(&name, "");
     let name = REG2.replace_all(&name, "");
     name.to_string()
