@@ -4,8 +4,12 @@ run = "go build -trimpath -ldflags='-s -w'"
 
 [tasks.test]
 description = "Test the golang CLI"
-depends = [":build", "//:clean"]
+depends = [":build", ":clean_tests_golang"]
 run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ../test/solutions_golang"
+
+[tasks.clean_tests_golang]
+description = "Clean golang test dir"
+run = "rm -rf ./test/solutions_golang"
 
 [tasks.dump_mysavegame]
 description = "dumps the contents of my savegame"

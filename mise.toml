@@ -18,7 +18,3 @@ run = "cp ~/.local/share/Replicube/progress.dat ./test/large_progress.dat"
 [tasks.dump]
 description = "Uses golang to dump the contents of my savegame"
 run = "mise //replicube_lua_exporter_golang:dump_mysavegame"
-
-[tasks.clean_tests]
-description = "Clean test dir"
-run = "rm -rf ./test/solutions_golang ./test/solutions_rust"
