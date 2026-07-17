@@ -1,0 +1,12 @@
+[tasks.build]
+description = "Build the golang CLI"
+run = "go build -trimpath -ldflags='-s -w'"
+
+[tasks.test]
+description = "Test the golang CLI"
+depends = [":build", "//:clean"]
+run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ../test/solutions_golang"
+
+[tasks.dump_mysavegame]
+description = "dumps the contents of my savegame"
+run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ~/code/personal/replicube_solutions/"

@@ -1,0 +1,8 @@
+[tasks.build]
+description = "Build the rust CLI"
+run = "cargo build"
+
+[tasks.test]
+description = "Test the rust CLI"
+depends = [":build", "//:clean"]
+run = "./target/debug/replicube_lua_exporter_rust -f ../test/large_progress.dat -o ../test/solutions_rust"

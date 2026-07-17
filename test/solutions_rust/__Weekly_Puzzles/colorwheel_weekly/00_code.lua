@@ -1,0 +1,1 @@
+return x+y+z == 0 and t%6+7

@@ -1,0 +1,1 @@
+return x == y and y == z and GREEN
