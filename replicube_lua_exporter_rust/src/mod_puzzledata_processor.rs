@@ -67,10 +67,11 @@ fn lookup_main_story_dirname(
     puzzle: &mod_save_file_parser::Puzzle,
     outdir: &PathBuf,
 ) -> Option<PathBuf> {
-    let looked_up_dirname =
+    let level_lookup =
         mod_save_file_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str())?;
-    let clean_dirname = mod_save_file_parser::sanitize_dir_string(looked_up_dirname);
-    Some(outdir.join(clean_dirname))
+    let clean_dirname = mod_save_file_parser::sanitize_dir_string(level_lookup.dirname);
+    let clean_levelname = mod_save_file_parser::sanitize_dir_string(level_lookup.level_name);
+    Some(outdir.join(clean_dirname).join(clean_levelname))
 }
 
 fn is_weekly_puzzle(puzzle: &mod_save_file_parser::Puzzle) -> bool {

@@ -4,5 +4,9 @@ run = "cargo build"
 
 [tasks.test]
 description = "Test the rust CLI"
-depends = [":build", "//:clean"]
+depends = [":build", ":clean_tests_rust"]
 run = "./target/debug/replicube_lua_exporter_rust -f ../test/large_progress.dat -o ../test/solutions_rust"
+
+[tasks.clean_tests_rust]
+description = "Clean rust test dir"
+run = "rm -rf ./test/solutions_rust"
