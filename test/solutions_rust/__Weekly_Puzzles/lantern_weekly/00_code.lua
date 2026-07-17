@@ -1,1 +1,0 @@
-return max(y+7, RED)

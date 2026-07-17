@@ -1,2 +1,0 @@
--- The Trophy image from Replifest Summer 2025.
--- Thanks to everyone who participated!

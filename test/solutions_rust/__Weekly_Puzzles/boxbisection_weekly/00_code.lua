@@ -1,1 +1,0 @@
-return abs(x) >= t and max(abs(x)-t, abs(y), abs(z)) == 2

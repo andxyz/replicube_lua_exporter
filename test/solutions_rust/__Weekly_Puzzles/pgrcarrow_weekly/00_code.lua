@@ -1,2 +1,0 @@
--- The iconic "go that way" indicators from the
--- hit indie game Parking Garage Rally Circuit :)

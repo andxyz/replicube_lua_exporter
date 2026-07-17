@@ -1,1 +1,0 @@
-return x^2 == y^2 and y^2 == z^2 and BLACK

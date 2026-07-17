@@ -1,1 +1,0 @@
-return y==sign(x)

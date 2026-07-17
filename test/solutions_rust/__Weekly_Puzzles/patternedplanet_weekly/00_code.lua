@@ -1,2 +1,0 @@
--- So you think you know how to do symmetry?
--- How about diagonal symmetry!

@@ -1,4 +1,0 @@
--- Did you know...
--- The leader of a herd of elephants is 
--- the oldest female! 
--- A very large example of a matriarchal family!

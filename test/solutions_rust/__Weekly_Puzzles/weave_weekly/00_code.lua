@@ -1,1 +1,0 @@
-return y == round(cos(x*pi/4))
