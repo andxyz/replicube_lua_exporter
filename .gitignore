@@ -5,8 +5,6 @@ test/*_progress.dat
 #####
 ## GOLANG GITIGNORE
 #####
-# sample progress files
-replicube_lua_exporter_golang/*_progress.dat
 # the executable
 replicube_lua_exporter_golang/replicube_lua_exporter
 
