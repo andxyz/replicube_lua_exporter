@@ -1,0 +1,88 @@
+[apps]
+
+activated=Array[String](["AppVoxel", "AppPaint", "AppStackItUp"])
+features=Array[String](["potw", "share_files", "challenges_01"])
+
+[sets]
+
+active=Array[String](["tutorial", "set_1", "set_1b", "set_2", "set_3", "set_sports", "set_3b", "set_music", "set_3c", "set_round_things"])
+
+[puzzles]
+
+all=[{
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 3.0,
+"code_size": 2,
+"code_variants": {
+"code": "--[[
+Your job is to write code to generate
+an object that matches the one in upper right --->
+
+your code should 'return' the color you want
+each voxel to be.
+
+you can use names (WHITE, RED, YELLOW, GREEN, etc)
+or numbers (1-16) for colors (see the palette below)
+
+Try modifying the code below to match the color in the
+reference ]]
+
+return 7"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "hello.txt",
+"size": 3,
+"source": 100,
+"variant_order": ["code"]
+}, {
+"active_variant": "code 2",
+"animated": false,
+"challenge_complete": true,
+"code_instructions": 4.0,
+"code_size": 6,
+"code_variants": {
+"code": "
+if y > 0 then
+	return DARKBLUE
+else
+	return ORANGE
+end
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "first_condition.txt",
+"size": 3,
+"source": 100,
+"variant_order": ["code", "code 2"]
+}, {
+"active_variant": "code 2",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 4.66667,
+"code_size": 14,
+"code_variants": {
+"code": "
+if y > 1 then
+	return RED
+elseif y >= -1 then
+	return YELLOW
+else
+  return GREEN
+end",
+"code 2": "
+return ((6+y)&-4)+7"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "change-the-operators.txt",
+"size": 4,
+"source": 100,
+"variant_order": ["code", "code 2"]
+}]

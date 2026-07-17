@@ -1,0 +1,1 @@
+return z == 0 and (x < 20 and y > -20) and ((x == -11 or y == -9) and BLACK or WHITE)

@@ -1,0 +1,1 @@
+return max(x,y,z) == -min(x,y,z)

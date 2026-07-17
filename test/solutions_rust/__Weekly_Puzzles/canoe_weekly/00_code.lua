@@ -1,0 +1,3 @@
+-- how can I make a 'canoe" shape? hmmm...
+-- intersecting shapes perhaps?
+return y == -2 and BLUE

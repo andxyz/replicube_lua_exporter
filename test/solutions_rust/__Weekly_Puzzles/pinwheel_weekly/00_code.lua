@@ -1,0 +1,1 @@
+return 6/10*atan(x-1,y)+3
