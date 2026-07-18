@@ -1,3 +1,6 @@
+[env]
+_.path = ["./target/debug"]
+
 [tasks.build]
 description = "Build the rust CLI"
 run = "cargo build"
@@ -5,7 +8,7 @@ run = "cargo build"
 [tasks.test]
 description = "Test the rust CLI"
 depends = [":build", ":clean_tests_rust"]
-run = "./target/debug/replicube_lua_exporter_rust -f ../test/large_progress.dat -o ../test/solutions_rust"
+run = "replicube_lua_exporter_rust -f ../test/large_progress.dat -o ../test/solutions_rust"
 
 [tasks.clean_tests_rust]
 description = "Clean rust test dir"

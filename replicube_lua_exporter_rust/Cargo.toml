@@ -6,6 +6,7 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.102"
 clap = { version = "4.6.0", features = ["derive"] }
+log = "0.4"
 phf = { version = "0.13.1", features = ["macros"] }
 regex = "1.12.3"
 serde = { version = "1.0.228", features = ["derive"] }

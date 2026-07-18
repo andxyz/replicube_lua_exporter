@@ -18,9 +18,9 @@ pub(crate) fn process_and_create_files(
             continue;
         }
 
-        println!("#############");
-        println!("{}:", puzzle.id);
-        println!("#############");
+        log::info!("#############");
+        log::info!("{}:", puzzle.id);
+        log::info!("#############");
 
         let target_dir = if is_main_story_puzzle(puzzle) {
             match lookup_main_story_dirname(puzzle, outdir) {
@@ -42,19 +42,19 @@ pub(crate) fn process_and_create_files(
 
         for (i, code_tab_name) in puzzle.variant_order.iter().enumerate() {
             let filename = format!("{:02}_{}.lua", i, code_tab_name);
-            println!("{}: ", filename);
+            log::info!("{}: ", filename);
             let code = puzzle
                 .code_variants
                 .get(code_tab_name)
                 .map(|s| s.as_str())
                 .unwrap_or("");
-            println!("{}", code);
+            log::info!("{}", code);
 
             let file_path = target_dir.join(filename);
             fs::write(&file_path, code)
                 .with_context(|| format!("Error writing file {:?}", file_path))?;
         }
-        println!();
+        log::info!("");
     }
     Ok(())
 }
@@ -67,8 +67,7 @@ fn lookup_main_story_dirname(
     puzzle: &mod_save_file_parser::Puzzle,
     outdir: &PathBuf,
 ) -> Option<PathBuf> {
-    let level_lookup =
-        mod_save_file_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str())?;
+    let level_lookup = mod_save_file_parser::PROPER_DIRNAME_LOOKUP.get(puzzle.id.as_str())?;
     let clean_dirname = mod_save_file_parser::sanitize_dir_string(level_lookup.dirname);
     let clean_levelname = mod_save_file_parser::sanitize_dir_string(level_lookup.level_name);
     Some(outdir.join(clean_dirname).join(clean_levelname))
@@ -83,4 +82,3 @@ fn lookup_weekly_dirname(puzzle: &mod_save_file_parser::Puzzle, outdir: &PathBuf
     let clean_puzzle_id = mod_save_file_parser::sanitize_dir_string(&puzzle.id);
     outdir.join(clean_weekly_dirname).join(clean_puzzle_id)
 }
-
