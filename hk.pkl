@@ -33,8 +33,8 @@ local linters = new Mapping<String, Step> {
     //}
     ["cargo-fmt"] {
       glob = List("./replicube_lua_exporter_rust/**/*.rs")
-      check = "cd ./replicube_lua_exporter_rust/ && cargo fmt --all -- --check {{ files }}"
-      fix = "cd ./replicube_lua_exporter_rust/ && cargo fix --allow-dirty --allow-staged {{ files }}"
+      check = "cargo fmt --all -- --check {{ files }}"
+      fix = "cargo fix --allow-dirty --allow-staged {{ files }}"
     }
     ["cargo-check"] = (Builtins.cargo_check) {
       glob = List("./replicube_lua_exporter_rust/**/*.rs")
