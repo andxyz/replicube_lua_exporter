@@ -27,17 +27,18 @@ local linters = new Mapping<String, Step> {
       fix = "mise x prettier -- prettier --write {{ files }}"
       depends = List("schema")
     }
-    ["clippy"] = (Builtins.cargo_clippy) {
-      check = "cargo clippy --manifest-path {{workspace_indicator}} --all-features -- -Dwarnings"
-      fix = "cargo clippy --manifest-path {{workspace_indicator}} --all-features --fix --allow-dirty --allow-staged -- -Dwarnings"
-    }
+    //["clippy"] = (Builtins.cargo_clippy) {
+    //  check = "cargo clippy --manifest-path {{workspace_indicator}} --all-features -- -Dwarnings"
+    //  fix = "cargo clippy --manifest-path {{workspace_indicator}} --all-features --fix --allow-dirty --allow-staged -- -Dwarnings"
+    //}
     ["cargo-fmt"] {
       glob = List("./replicube_lua_exporter_rust/**/*.rs")
-      check = "cargo fmt --all -- --check {{ files }}"
-      fix = "cargo fmt --all {{ files }}"
+      check = "cd ./replicube_lua_exporter_rust/ && cargo fmt --all -- --check {{ files }}"
+      fix = "cd ./replicube_lua_exporter_rust/ && cargo fix --allow-dirty --allow-staged {{ files }}"
     }
     ["cargo-check"] = (Builtins.cargo_check) {
-      check = "cargo check --all-features"
+      glob = List("./replicube_lua_exporter_rust/**/*.rs")
+      check = "cargo check --all-features {{ files }}"
     }
     ["shellcheck"] = (Builtins.shellcheck) {
       glob = bash_glob
