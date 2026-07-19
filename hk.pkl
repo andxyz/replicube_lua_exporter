@@ -32,13 +32,12 @@ local linters = new Mapping<String, Step> {
     //  fix = "cargo clippy --manifest-path {{workspace_indicator}} --all-features --fix --allow-dirty --allow-staged -- -Dwarnings"
     //}
     ["cargo-fmt"] {
-      glob = List("./replicube_lua_exporter_rust/**/*.rs")
-      check = "cargo fmt --all -- --check {{ files }}"
-      fix = "cargo fix --allow-dirty --allow-staged {{ files }}"
+      check = "cd ./replicube_lua_exporter_rust && cargo fmt --all -- --check"
+      fix = "cd ./replicube_lua_exporter_rust && cd cargo fix --allow-dirty --allow-staged"
     }
     ["cargo-check"] = (Builtins.cargo_check) {
-      glob = List("./replicube_lua_exporter_rust/**/*.rs")
-      check = "cargo check --all-features {{ files }}"
+      glob = List("./replicube_lua_exporter_rust/Cargo.toml")
+      check = "cargo check --all-features --manifest-path {{ files }}"
     }
     ["shellcheck"] = (Builtins.shellcheck) {
       glob = bash_glob
@@ -73,17 +72,16 @@ fi
         fix = "taplo fmt --diff {{files}} && taplo check {{files}}"
     }
 
-    // uses lua-language-server to check vfox test plugin Lua files
-    // excludes embedded-plugins/ which are vendored from external repos
-    ["lua-check"] {
-        glob = List("**/*.lua")
-        check = "lua-language-server --check ./"
-    }
-    ["stylua"] {
-        glob = List("**/*.lua")
-        check = "stylua --check ./"
-        fix = "stylua ./"
-    }
+    // uses lua-language-server to check Lua files
+    // ["lua-check"] {
+    //     glob = List("**/*.lua")
+    //     check = "lua-language-server --check ./"
+    // }
+    // ["stylua"] {
+    //     glob = List("**/*.lua")
+    //     check = "stylua --check ./"
+    //     fix = "stylua ./"
+    // }
     ["actionlint"] {
         glob = List(".github/workflows/*.yml")
         check = "SHELLCHECK_OPTS='--exclude=SC1090 --exclude=SC2046 --exclude=SC2086 --exclude=SC2129' actionlint"

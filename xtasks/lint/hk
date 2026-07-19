@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+#MISE description="Lint HK files"
+#MISE wait_for=["//replicube_lua_exporter_golang:build", "//replicube_lua_exporter_rust:build"]
+HK_FAIL_FAST=0 exec hk check --all

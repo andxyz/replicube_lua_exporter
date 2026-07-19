@@ -23,6 +23,7 @@ pkl = "latest"
 actionlint = "latest"
 jq = "latest"
 fd = "latest"
+lua-language-server = "latest"
 stylua = "latest"
 "npm:markdownlint-cli" = "latest"
 prettier = "3.9.5"
@@ -30,5 +31,12 @@ shellcheck = "latest"
 shfmt = "latest"
 taplo = "latest"
 
+[hooks]
+# Automatically install/update hooks when tools are installed
+postinstall = "hk install --mise"
+
 [settings]
 lockfile = true
+
+[task_config]
+includes = [ "tasks.toml", "xtasks" ]
