@@ -1,6 +1,6 @@
 # Taplo configuration for mise
 
-exclude = ["replicube_lua_exporter_rust/Cargo.toml", ""]
+exclude = [ "replicube_lua_exporter_rust/Cargo.toml", "" ]
 
 [formatting]
 align_entries = false
@@ -9,9 +9,10 @@ array_auto_collapse = true
 array_auto_expand = true
 indent_tables = false
 reorder_keys = false
+compact_arrays = false
 
 [[rule]]
-include = ["replicube_lua_exporter_rust/Cargo.toml"]
+include = [ "replicube_lua_exporter_rust/Cargo.toml" ]
 
 [rule.formatting]
 reorder_keys = false

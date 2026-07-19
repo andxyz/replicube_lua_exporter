@@ -8,8 +8,8 @@ HK_MISE = 1
 
 [monorepo]
 config_roots = [
-    "replicube_lua_exporter_golang",
-    "replicube_lua_exporter_rust",
+  "replicube_lua_exporter_golang",
+  "replicube_lua_exporter_rust",
 ]
 
 [tools]
@@ -25,7 +25,7 @@ jq = "latest"
 fd = "latest"
 stylua = "latest"
 "npm:markdownlint-cli" = "latest"
-prettier = "latest"
+prettier = "3.9.5"
 shellcheck = "latest"
 shfmt = "latest"
 taplo = "latest"

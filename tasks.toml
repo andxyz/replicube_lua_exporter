@@ -4,7 +4,7 @@ description = "copy the savegame"
 run = "cp ~/.local/share/Replicube/progress.dat ./test/large_progress.dat"
 
 [tasks.dump]
-depends = [":copy_savegame"]
+depends = [ ":copy_savegame" ]
 description = "Uses golang to dump the contents of my savegame"
 run = "mise //replicube_lua_exporter_golang:dump_mysavegame"
 
