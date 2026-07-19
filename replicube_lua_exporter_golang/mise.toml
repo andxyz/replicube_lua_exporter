@@ -1,3 +1,5 @@
+#:schema https://mise.en.dev/schema/mise-task.json
+
 [tasks.build]
 description = "Build the golang CLI"
 run = "go build -trimpath -ldflags='-s -w'"
