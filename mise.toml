@@ -1,23 +1,34 @@
-#:schema ./schema/mise.json
+#:schema https://mise.en.dev/schema/mise.json
 min_version = "2026.7.7"
 # experimental_monorepo_root=true
 monorepo_root = true
 
+[env]
+HK_MISE = 1
+
 [monorepo]
 config_roots = [
-    "replicube_lua_exporter_golang",
-    "replicube_lua_exporter_rust",
+  "replicube_lua_exporter_golang",
+  "replicube_lua_exporter_rust",
 ]
 
 [tools]
 go = "latest"
 rust = "latest"
+sops = "latest"
+# hk [tools_hk]
+hk = "latest"
+pkl = "latest"
+# more hk things [tools_hkthings]
+actionlint = "latest"
+jq = "latest"
+fd = "latest"
+stylua = "latest"
+"npm:markdownlint-cli" = "latest"
+prettier = "3.9.5"
+shellcheck = "latest"
+shfmt = "latest"
+taplo = "latest"
 
-[tasks.copy_savegame]
-description = "copy the savegame"
-run = "cp ~/.local/share/Replicube/progress.dat ./test/large_progress.dat"
-
-[tasks.dump]
-depends = [":copy_savegame"]
-description = "Uses golang to dump the contents of my savegame"
-run = "mise //replicube_lua_exporter_golang:dump_mysavegame"
+[settings]
+lockfile = true

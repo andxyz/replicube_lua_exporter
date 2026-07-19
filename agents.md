@@ -31,5 +31,5 @@ mise //replicube_lua_exporter_golang:test
 
 ## Notes
 
-- Each command writes output to a sibling directory (`./test/solutions_rust/` or `./test/solutions_golang/`) 
+- Each command writes output to a sibling directory (`./test/solutions_rust/` or `./test/solutions_golang/`)
 - Output directories (`./test/solutions_rust/` or `./test/solutions_golang/`) will be created relative to the root if they do not already exist.

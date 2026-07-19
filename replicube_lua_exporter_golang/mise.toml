@@ -1,10 +1,12 @@
+#:schema https://mise.en.dev/schema/mise-task.json
+
 [tasks.build]
 description = "Build the golang CLI"
 run = "go build -trimpath -ldflags='-s -w'"
 
 [tasks.test]
 description = "Test the golang CLI"
-depends = [":build", ":clean_tests_golang"]
+depends = [ ":build", ":clean_tests_golang" ]
 run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ../test/solutions_golang"
 
 [tasks.clean_tests_golang]
