@@ -23,5 +23,5 @@ description = "Clean golang test dir"
 run = "rm -rf ./test/solutions_golang"
 
 [tasks."dump_mysavegame"]
-description = "dumps the contents of my savegame"
+description = "Dumps the contents of my savegame"
 run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ~/code/personal/replicube_solutions/"

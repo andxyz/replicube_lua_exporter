@@ -1,6 +1,6 @@
 #:schema https://mise.en.dev/schema/mise-task.json
 [copy_savegame]
-description = "copy the savegame"
+description = "Copy the savegame"
 run = "cp ~/.local/share/Replicube/progress.dat ./test/large_progress.dat"
 
 [dump]
