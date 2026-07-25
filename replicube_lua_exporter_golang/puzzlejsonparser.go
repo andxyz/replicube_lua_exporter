@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -33,25 +34,23 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 
 	for _, puzzle := range puzzlesData.Puzzles {
 		if !isMainStoryPuzzle(puzzle) && !isWeeklyPuzzle(puzzle) {
-			fmt.Printf("Warning: skipping puzzle ID: '%s', puzzle source: '%d'\n", puzzle.ID, puzzle.Source)
+			slog.Debug("Warning: skipping puzzle", "puzzleID", puzzle.ID, "puzzleSource", puzzle.Source)
 			continue
 		}
 
-		fmt.Println("#############")
-		fmt.Printf("%s:\n", puzzle.ID)
-		fmt.Println("#############")
+		slog.Debug("Begins processing puzzle", "PuzzleID", puzzle.ID)
 
 		ok, targetDir := false, ""
 		if isMainStoryPuzzle(puzzle) {
 			ok, targetDir = lookupMainStoryDirname(puzzle, outputDir)
 			if !ok {
-				fmt.Printf("Warning: puzzle ID %s not found in mainstory lookup table, skipping\n", puzzle.ID)
+				slog.Info("Warning: puzzle ID not found in mainstory lookup table, skipping", "PuzzleID", puzzle.ID)
 				continue
 			}
 		} else if isWeeklyPuzzle(puzzle) {
 			ok, targetDir = lookupWeeklyDirname(puzzle, outputDir)
 			if !ok {
-				fmt.Printf("Warning: skipping puzzle ID %s\n", puzzle.ID)
+				slog.Debug("Warning: skipping puzzle", "puzzleID", puzzle.ID)
 				continue
 			}
 		}
@@ -63,9 +62,9 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 
 		for i, codeTabName := range puzzle.VariantOrder {
 			filename := fmt.Sprintf("%02d_%s.lua", i, codeTabName)
-			fmt.Printf("%s: \n", filename)
+			slog.Debug("dumping file", "filename", filename)
 			code := puzzle.CodeVariants[codeTabName]
-			fmt.Println(code)
+			slog.Debug("Dumping code", "code", code)
 
 			filePath := filepath.Join(targetDir, filename)
 			err := os.WriteFile(filePath, []byte(code), 0644)
@@ -73,7 +72,8 @@ func ParsePuzzleJSONCreateDirsAndLuaFiles(jsonData []byte, outputDir string) err
 				return fmt.Errorf("error writing file %s: %w", filePath, err)
 			}
 		}
-		fmt.Println()
+
+		slog.Debug("Ends processing puzzle", "PuzzleID", puzzle.ID)
 	}
 
 	return nil
