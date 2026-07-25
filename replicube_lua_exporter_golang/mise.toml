@@ -7,11 +7,11 @@ run = "go build -trimpath -ldflags='-s -w'"
 [tasks.test]
 description = "Test the golang CLI"
 alias = 't'
-run = ["mise tasks run test:export", "mise tasks run test:compare_dirs"]
+run = [ "mise tasks run test:export", "mise tasks run test:compare_dirs" ]
 
 [tasks."test:export"]
 description = "Test the export"
-depends = [ ":build", ":clean_tests_golang"]
+depends = [ ":build", ":clean_tests_golang" ]
 run = "./replicube_lua_exporter -f ../test/large_progress.dat -o ../test/solutions_golang"
 
 [tasks."test:compare_dirs"]
