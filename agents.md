@@ -18,7 +18,7 @@ mise tasks --all
 Test the rust CLI
 
 ```sh
-mise //replicube_lua_exporter_rust:test
+mise run //replicube_lua_exporter_rust:test
 ```
 
 ### Golang
@@ -26,7 +26,7 @@ mise //replicube_lua_exporter_rust:test
 Test the golang CLI
 
 ```sh
-mise //replicube_lua_exporter_golang:test
+mise run //replicube_lua_exporter_golang:test
 ```
 
 ## Notes

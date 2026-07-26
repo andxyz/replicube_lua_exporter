@@ -389,3 +389,209 @@ pub(crate) fn sanitize_dir_string(dir_name: &str) -> String {
     let name = REG2.replace_all(&name, "");
     name.to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Write;
+
+    #[test]
+    fn test_sanitize_dir_string() {
+        assert_eq!(sanitize_dir_string("01_Tutorial"), "01_Tutorial");
+        assert_eq!(sanitize_dir_string("01 - The Very Basics"), "01__The_Very_Basics");
+        assert_eq!(sanitize_dir_string("Not a Flower :)"), "Not_a_Flower");
+        assert_eq!(sanitize_dir_string("__Weekly_Puzzles"), "__Weekly_Puzzles");
+        assert_eq!(sanitize_dir_string("hello.txt"), "hello_txt");
+        assert_eq!(sanitize_dir_string("Trailing_Underscores___"), "Trailing_Underscores");
+    }
+
+    #[test]
+    fn test_data_parser_string() {
+        let mut parser = DataParser::new(r#""hello""#);
+        assert_eq!(parser.parse_string().unwrap(), "hello");
+
+        let mut parser = DataParser::new(r#""hello \"world\"""#);
+        assert_eq!(parser.parse_string().unwrap(), r#"hello "world""#);
+
+        let mut parser = DataParser::new(r#""a\\b""#);
+        assert_eq!(parser.parse_string().unwrap(), r#"a\b"#);
+    }
+
+    #[test]
+    fn test_data_parser_string_errors() {
+        let mut parser = DataParser::new(r#""unterminated"#);
+        assert!(parser.parse_string().is_err());
+
+        let mut parser = DataParser::new(r#""escape_end\"#);
+        assert!(parser.parse_string().is_err());
+
+        let mut parser = DataParser::new(r#"no_quotes"#);
+        assert!(parser.parse_string().is_err());
+    }
+
+    #[test]
+    fn test_data_parser_bool() {
+        let mut parser = DataParser::new("true");
+        assert_eq!(parser.parse_bool().unwrap(), true);
+
+        let mut parser = DataParser::new("false");
+        assert_eq!(parser.parse_bool().unwrap(), false);
+
+        let mut parser = DataParser::new("invalid");
+        assert!(parser.parse_bool().is_err());
+    }
+
+    #[test]
+    fn test_data_parser_number() {
+        let mut parser = DataParser::new("123");
+        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(123.into()));
+
+        let mut parser = DataParser::new("-456");
+        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number((-456).into()));
+
+        let mut parser = DataParser::new("12.34");
+        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(serde_json::Number::from_f64(12.34).unwrap()));
+
+        let mut parser = DataParser::new("12.0");
+        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(12.into()));
+
+        let mut parser = DataParser::new("abc");
+        assert!(parser.parse_number().is_err());
+    }
+
+    #[test]
+    fn test_data_parser_array() {
+        let mut parser = DataParser::new("[]");
+        assert_eq!(parser.parse_array().unwrap(), serde_json::Value::Array(vec![]));
+
+        let mut parser = DataParser::new("[1, 2, 3]");
+        assert_eq!(
+            parser.parse_array().unwrap(),
+            serde_json::Value::Array(vec![
+                serde_json::Value::Number(1.into()),
+                serde_json::Value::Number(2.into()),
+                serde_json::Value::Number(3.into())
+            ])
+        );
+
+        let mut parser = DataParser::new("[true, \"hello\"]");
+        assert_eq!(
+            parser.parse_array().unwrap(),
+            serde_json::Value::Array(vec![
+                serde_json::Value::Bool(true),
+                serde_json::Value::String("hello".to_string())
+            ])
+        );
+
+        let mut parser = DataParser::new("[1,");
+        assert!(parser.parse_array().is_err());
+    }
+
+    #[test]
+    fn test_data_parser_object() {
+        let mut parser = DataParser::new("{}");
+        assert_eq!(parser.parse_object().unwrap(), serde_json::Value::Object(serde_json::Map::new()));
+
+        let mut parser = DataParser::new(r#"{"key": "value", "num": 42}"#);
+        let mut expected = serde_json::Map::new();
+        expected.insert("key".to_string(), serde_json::Value::String("value".to_string()));
+        expected.insert("num".to_string(), serde_json::Value::Number(42.into()));
+        assert_eq!(parser.parse_object().unwrap(), serde_json::Value::Object(expected));
+
+        let mut parser = DataParser::new(r#"{"key" "value"}"#);
+        assert!(parser.parse_object().is_err());
+    }
+
+    #[test]
+    fn test_parse_progress_file() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("progress.dat");
+
+        let content = r#"[apps]
+activated=Array[String](["AppVoxel"])
+
+[sets]
+active=Array[String](["tutorial"])
+
+[puzzles]
+all=[{
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 3.0,
+"code_size": 2,
+"code_variants": {
+"code": "return 7"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "hello.txt",
+"size": 3,
+"source": 100,
+"variant_order": ["code"]
+}]
+"#;
+
+        let mut file = std::fs::File::create(&file_path).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+
+        let parsed = parse_progress_file(&file_path).unwrap();
+        assert_eq!(parsed.puzzles.len(), 1);
+        let puzzle = &parsed.puzzles[0];
+        assert_eq!(puzzle.id, "hello.txt");
+        assert_eq!(puzzle.active_variant, "code");
+        assert_eq!(puzzle.completed, true);
+        assert_eq!(puzzle.source, 100);
+        assert_eq!(puzzle.code_variants.get("code").unwrap(), "return 7");
+    }
+
+    #[test]
+    fn test_deserialize_null_default() {
+        let json_str = r#"{
+            "active_variant": null,
+            "animated": null,
+            "challenge_complete": null,
+            "code_instructions": null,
+            "code_size": null,
+            "code_variants": {},
+            "completed": null,
+            "fps": null,
+            "frames": null,
+            "id": "hello.txt",
+            "size": null,
+            "source": null,
+            "variant_order": []
+        }"#;
+
+        let puzzle: Puzzle = serde_json::from_str(json_str).unwrap();
+        assert_eq!(puzzle.id, "hello.txt");
+        assert_eq!(puzzle.active_variant, "");
+        assert_eq!(puzzle.animated, false);
+        assert_eq!(puzzle.challenge_complete, false);
+        assert_eq!(puzzle.code_instructions, 0.0);
+        assert_eq!(puzzle.code_size, 0);
+        assert_eq!(puzzle.completed, false);
+        assert_eq!(puzzle.fps, 0);
+        assert_eq!(puzzle.frames, 0);
+        assert_eq!(puzzle.size, 0);
+        assert_eq!(puzzle.source, 0);
+    }
+
+    #[test]
+    fn test_parse_progress_file_errors() {
+        let temp_dir = tempfile::tempdir().unwrap();
+        let file_path = temp_dir.path().join("progress.dat");
+
+        let content = "only some apps info";
+        let mut file = std::fs::File::create(&file_path).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+        assert!(parse_progress_file(&file_path).is_err());
+
+        let content = "[puzzles]\nsome_other_key=123";
+        let mut file = std::fs::File::create(&file_path).unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+        assert!(parse_progress_file(&file_path).is_err());
+    }
+}
+

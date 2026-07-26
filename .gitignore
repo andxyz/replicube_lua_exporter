@@ -1,6 +1,5 @@
 ## Test data
 test/solutions_*/
-test/*_progress.dat
 
 #####
 ## GOLANG GITIGNORE

@@ -9,7 +9,12 @@ run = "cargo build"
 
 [tasks.test]
 description = "Test the rust CLI"
-run = [ "mise tasks run test:export", "mise tasks run test:compare_dirs" ]
+run = [ "mise tasks run test:cargo_test", "mise tasks run test:export", "mise tasks run test:compare_dirs" ]
+
+[tasks."test:cargo_test"]
+description = "Cargo test"
+depends = [ ":build" ]
+run = "cargo test"
 
 [tasks."test:export"]
 description = "Test the export"
