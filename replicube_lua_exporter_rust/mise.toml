@@ -9,8 +9,16 @@ run = "cargo build"
 
 [tasks.test]
 description = "Test the rust CLI"
+run = [ "mise tasks run test:export", "mise tasks run test:compare_dirs" ]
+
+[tasks."test:export"]
+description = "Test the export"
 depends = [ ":build", ":clean_tests_rust" ]
 run = "replicube_lua_exporter_rust -f ../test/large_progress.dat -o ../test/solutions_rust"
+
+[tasks."test:compare_dirs"]
+description = "Test using compare"
+run = "diff --recursive -y --suppress-common-lines --exclude='puzzles.json' ../test/solutions_golang ../test/solutions_rust"
 
 [tasks.clean_tests_rust]
 description = "Clean rust test dir"
