@@ -33,7 +33,7 @@ local linters = new Mapping<String, Step> {
     //}
     ["cargo-fmt"] {
       check = "cd ./replicube_lua_exporter_rust && cargo fmt --all -- --check"
-      fix = "cd ./replicube_lua_exporter_rust && cd cargo fix --allow-dirty --allow-staged"
+      fix = "cd ./replicube_lua_exporter_rust && cargo fix --all-targets --allow-dirty --allow-staged"
     }
     ["cargo-check"] = (Builtins.cargo_check) {
       glob = List("./replicube_lua_exporter_rust/Cargo.toml")

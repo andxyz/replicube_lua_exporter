@@ -217,7 +217,7 @@ impl<'a> DataParser<'a> {
             b'"' => self.parse_string().map(serde_json::Value::String),
             b't' | b'f' => self.parse_bool().map(serde_json::Value::Bool),
             _ => {
-                if (c >= b'0' && c <= b'9') || c == b'-' || c == b'.' {
+                if (b'0'..=b'9').contains(&c) || c == b'-' || c == b'.' {
                     self.parse_number()
                 } else {
                     Err(anyhow!(
@@ -286,7 +286,7 @@ impl<'a> DataParser<'a> {
         let bytes = self.input.as_bytes();
         while self.pos < bytes.len() {
             let c = bytes[self.pos];
-            if (c >= b'0' && c <= b'9')
+            if (b'0'..=b'9').contains(&c)
                 || c == b'-'
                 || c == b'.'
                 || c == b'e'
@@ -322,7 +322,7 @@ impl<'a> DataParser<'a> {
         // If we can't parse as a number, return a default value
         Ok(serde_json::Number::from_f64(n)
             .map(serde_json::Value::Number)
-            .unwrap_or(serde_json::Value::default()))
+            .unwrap_or_default())
     }
 
     pub(crate) fn parse_array(&mut self) -> Result<serde_json::Value> {
