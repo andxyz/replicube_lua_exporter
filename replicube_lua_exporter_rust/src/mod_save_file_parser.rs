@@ -217,7 +217,7 @@ impl<'a> DataParser<'a> {
             b'"' => self.parse_string().map(serde_json::Value::String),
             b't' | b'f' => self.parse_bool().map(serde_json::Value::Bool),
             _ => {
-                if (c >= b'0' && c <= b'9') || c == b'-' || c == b'.' {
+                if (b'0'..=b'9').contains(&c) || c == b'-' || c == b'.' {
                     self.parse_number()
                 } else {
                     Err(anyhow!(
@@ -286,7 +286,7 @@ impl<'a> DataParser<'a> {
         let bytes = self.input.as_bytes();
         while self.pos < bytes.len() {
             let c = bytes[self.pos];
-            if (c >= b'0' && c <= b'9')
+            if (b'0'..=b'9').contains(&c)
                 || c == b'-'
                 || c == b'.'
                 || c == b'e'
@@ -322,7 +322,7 @@ impl<'a> DataParser<'a> {
         // If we can't parse as a number, return a default value
         Ok(serde_json::Number::from_f64(n)
             .map(serde_json::Value::Number)
-            .unwrap_or(serde_json::Value::default()))
+            .unwrap_or_default())
     }
 
     pub(crate) fn parse_array(&mut self) -> Result<serde_json::Value> {
@@ -398,11 +398,17 @@ mod tests {
     #[test]
     fn test_sanitize_dir_string() {
         assert_eq!(sanitize_dir_string("01_Tutorial"), "01_Tutorial");
-        assert_eq!(sanitize_dir_string("01 - The Very Basics"), "01__The_Very_Basics");
+        assert_eq!(
+            sanitize_dir_string("01 - The Very Basics"),
+            "01__The_Very_Basics"
+        );
         assert_eq!(sanitize_dir_string("Not a Flower :)"), "Not_a_Flower");
         assert_eq!(sanitize_dir_string("__Weekly_Puzzles"), "__Weekly_Puzzles");
         assert_eq!(sanitize_dir_string("hello.txt"), "hello_txt");
-        assert_eq!(sanitize_dir_string("Trailing_Underscores___"), "Trailing_Underscores");
+        assert_eq!(
+            sanitize_dir_string("Trailing_Underscores___"),
+            "Trailing_Underscores"
+        );
     }
 
     #[test]
@@ -444,16 +450,28 @@ mod tests {
     #[test]
     fn test_data_parser_number() {
         let mut parser = DataParser::new("123");
-        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(123.into()));
+        assert_eq!(
+            parser.parse_number().unwrap(),
+            serde_json::Value::Number(123.into())
+        );
 
         let mut parser = DataParser::new("-456");
-        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number((-456).into()));
+        assert_eq!(
+            parser.parse_number().unwrap(),
+            serde_json::Value::Number((-456).into())
+        );
 
         let mut parser = DataParser::new("12.34");
-        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(serde_json::Number::from_f64(12.34).unwrap()));
+        assert_eq!(
+            parser.parse_number().unwrap(),
+            serde_json::Value::Number(serde_json::Number::from_f64(12.34).unwrap())
+        );
 
         let mut parser = DataParser::new("12.0");
-        assert_eq!(parser.parse_number().unwrap(), serde_json::Value::Number(12.into()));
+        assert_eq!(
+            parser.parse_number().unwrap(),
+            serde_json::Value::Number(12.into())
+        );
 
         let mut parser = DataParser::new("abc");
         assert!(parser.parse_number().is_err());
@@ -462,7 +480,10 @@ mod tests {
     #[test]
     fn test_data_parser_array() {
         let mut parser = DataParser::new("[]");
-        assert_eq!(parser.parse_array().unwrap(), serde_json::Value::Array(vec![]));
+        assert_eq!(
+            parser.parse_array().unwrap(),
+            serde_json::Value::Array(vec![])
+        );
 
         let mut parser = DataParser::new("[1, 2, 3]");
         assert_eq!(
@@ -490,13 +511,22 @@ mod tests {
     #[test]
     fn test_data_parser_object() {
         let mut parser = DataParser::new("{}");
-        assert_eq!(parser.parse_object().unwrap(), serde_json::Value::Object(serde_json::Map::new()));
+        assert_eq!(
+            parser.parse_object().unwrap(),
+            serde_json::Value::Object(serde_json::Map::new())
+        );
 
         let mut parser = DataParser::new(r#"{"key": "value", "num": 42}"#);
         let mut expected = serde_json::Map::new();
-        expected.insert("key".to_string(), serde_json::Value::String("value".to_string()));
+        expected.insert(
+            "key".to_string(),
+            serde_json::Value::String("value".to_string()),
+        );
         expected.insert("num".to_string(), serde_json::Value::Number(42.into()));
-        assert_eq!(parser.parse_object().unwrap(), serde_json::Value::Object(expected));
+        assert_eq!(
+            parser.parse_object().unwrap(),
+            serde_json::Value::Object(expected)
+        );
 
         let mut parser = DataParser::new(r#"{"key" "value"}"#);
         assert!(parser.parse_object().is_err());
@@ -594,4 +624,3 @@ all=[{
         assert!(parse_progress_file(&file_path).is_err());
     }
 }
-

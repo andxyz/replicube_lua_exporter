@@ -185,7 +185,10 @@ mod tests {
             .join("01__The_Very_Basics")
             .join("00_code.lua");
         assert!(main_story_file.exists());
-        assert_eq!(std::fs::read_to_string(&main_story_file).unwrap(), "return 7");
+        assert_eq!(
+            std::fs::read_to_string(&main_story_file).unwrap(),
+            "return 7"
+        );
 
         let weekly_file_1 = outdir
             .join("__Weekly_Puzzles")

@@ -59,6 +59,9 @@ mod tests {
         let deserialized: PuzzlesData = serde_json::from_str(&file_content).unwrap();
         assert_eq!(deserialized.puzzles.len(), 1);
         assert_eq!(deserialized.puzzles[0].id, "hello.txt");
-        assert_eq!(deserialized.puzzles[0].code_variants.get("code").unwrap(), "return 7");
+        assert_eq!(
+            deserialized.puzzles[0].code_variants.get("code").unwrap(),
+            "return 7"
+        );
     }
 }
