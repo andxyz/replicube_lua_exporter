@@ -4,8 +4,12 @@
 _.path = [ "./target/debug" ]
 
 [tasks.build]
-description = "Build the rust CLI"
+description = "Build the rust CLI with debug profile"
 run = "cargo build"
+
+[tasks.build_release]
+description = "Build the rust CLI with release profile"
+run = "cargo build --release"
 
 [tasks.test]
 description = "Test the rust CLI"
