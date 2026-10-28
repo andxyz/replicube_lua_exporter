@@ -540,7 +540,7 @@ return z == 0 and x+10+y
 "source": 100,
 "variant_order": ["code"]
 }, {
-"active_variant": "code 3",
+"active_variant": "code",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 6.1895,
@@ -1216,17 +1216,37 @@ end"
 "animated": false,
 "challenge_complete": false,
 "code_variants": {
-"strange_waffle": "local function f(x,y,z)
-	return 
+"starting code": "-- This strange waffle has seen too much
+--
+-- Waffle: \"Cells Interlinked, Cells Interlinked, Cells Interlinked\"
+-- Interviewer: \"You are wayyy off baseline strange waffle\"
+
+local function f(x,y,z)
+	return (y==abs(x) or y==abs(z))
+end
+
+return f(x/t,y,z/t) and ({7,8,9,10})[clamp(y,1,4)]",
+"strange_waffle": "-- This strange waffle has seen too much
+-- 
+-- Waffle: \"Cells Interlinked, Cells Interlinked, Cells Interlinked\"
+-- Interviewer: \"You are wayyy off baseline strange waffle\"
+
+local function f(x,y,z)
+	return
 	(	
 		(y==abs(x) or y==abs(z)) 
 		and (y-1<abs(x) and y-1<abs(z)) 
-		and abs(y)<=6
+		
 	)
-	and ({4,8,9,14})[clamp(y+round((x*z)/34),1,4)]
+	and ({4,8,9,14})[clamp(y,1,4)]
 end
 
-t=3-t
+if t<10 then
+	t=10-t
+else
+	t=t-9
+end
+
 return f(x/t,y,z/t)
 "
 },
@@ -1236,7 +1256,7 @@ return f(x/t,y,z/t)
 "id": "__free_edit__",
 "size": 3,
 "source": 200,
-"variant_order": ["strange_waffle"]
+"variant_order": ["strange_waffle", "starting code"]
 }, {
 "active_variant": "code",
 "animated": false,
@@ -2137,7 +2157,7 @@ end -- 67
 "source": 100,
 "variant_order": ["code", "code 2", "code 3"]
 }, {
-"active_variant": "fastest",
+"active_variant": "theDerelict",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 21.2058,
@@ -3255,7 +3275,7 @@ end
 "source": 100,
 "variant_order": ["first_pass", "fastest"]
 }, {
-"active_variant": "_original_comment",
+"active_variant": "small_and_cool",
 "animated": true,
 "challenge_complete": false,
 "code_instructions": 9.11541,
@@ -11524,7 +11544,7 @@ return
 "source": 400,
 "variant_order": ["first_pass", "small1", "small2", "small3", "small4", "small5", "small6_final", "small7_learn", "fast1", "fast2", "fast3"]
 }, {
-"active_variant": "s99sphere",
+"active_variant": "f9_ai",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 8.5223,
@@ -14108,6 +14128,175 @@ or demoHelper(\"outer_union\", a, b, nil, PEACH)
 --## Have a look at shape \"b\" (3x3x3 mengercubes)
 --return b<=0 and (x-2)//3 + (y-2)//3 + (z-2)//3 + 12
 --",
+"code": "--[[
+	The Menger Sponge! Wait, it looks a little different?
+	
+	We are zoomed in here, so we can not see too much of the \"Menger Sponge\"
+	but, that is ok!
+	It makes things easier to work with when our working area is smaller.
+	
+	Some understanding of \"signed distance functions\" 
+  may help, thanks to https://iquilezles.org/articles/distfunctions/
+]]--
+
+--[[
+	1. Okay, first things first
+	
+	We setup a signed distance function (sdf) 
+	this will help us to create our mini menger boxes.
+	Together, we can use the \"sdMengerBox\" function to make 
+	a bunch of boxes and then combine	them in interesting ways.
+]]--
+
+-- \"signed distance function\" for \"MengerBox\" (let us keep this function handy)
+local function sdMengerBox(px, py, pz, size, holeWidth)
+  -- Distance to the base Cube
+  local apx = abs(px)
+  local apy = abs(py)
+  local apz = abs(pz)	
+  local adx = apx - size
+  local ady = apy - size
+  local adz = apz - size
+  local dBox = max(adx, ady, adz)
+
+  -- Define the cross-shaped holes (3 intersecting prisms)
+  -- hole through X-Y (Z-axis opening)
+  local hZ = max(apx - holeWidth, apy - holeWidth)
+  -- hole through Y-Z (X-axis opening)
+  local hX = max(apy - holeWidth, apz - holeWidth)
+  -- hole through Z-X (Y-axis opening)
+  local hY = max(apz - holeWidth, apx - holeWidth)
+
+  -- Union all the holes with min()
+  local crossHoles = min(hZ, hX, hY)
+  -- in SDFs, subtracting is, max(shape, -otherShape)
+  return max(dBox, -crossHoles)
+end
+-- this a helper function, we need it later to demo some things
+local function demoHelper(demo_name,a,b,color1,color2)
+  --## Subtraction examples:
+  if demo_name==\"subtraction_2\" then return max(-a,b)<=0 and color1 end
+	if demo_name==\"outer_subtraction_2\" then return max(-b,a)>0 and color2 end
+  --## Union examples
+	if demo_name==\"union\" then return min(a,b)<=0 and color1 end
+	if demo_name==\"outer_union\" then return min(a,b)>0 and color2 end
+  --## Intersection examples:
+	if demo_name==\"intersection\" then return max(a,b)<=0 and color1 end
+	if demo_name==\"outer_intersection\" then return max(a,b)>0 and color2 end
+  --## Some other examples I enjoyed:
+	 if demo_name==\"wacky_subtraction_1\" then return max(-a,b)>0 and color2 end
+  --## Fun with \"multiple combinations\"
+  --## You can keep on combining shapes together!
+  --## I enjoyed \"xor + outer union\":
+  if demo_name==\"xor_plus_outer_union\" then
+    if max(min(a,b),-max(a,b))<=0 then
+    	return color1
+    elseif min(a,b)>0 then
+    	return color2
+		else 
+			return 0
+    end
+  end
+  --## this one I call \"Subtraction + reversal Subtraction\":
+	if demo_name==\"subtraction_plus_reversal_subtraction\" then return max(-b,a)<=0 and color1 or max(-a,b)<=0 and color2 end
+	
+	return BROWN -- debug color incase our helper goes wrong somehow
+end
+
+--[[
+	2. Okay, second things second
+	
+	We will setup two variables: \"a=\" and \"b=\"
+	These will be our two \"shapes\".
+	
+	We can combine our \"shapes\" in simple ways with
+	a little bit of math, all thanks to our signed distance function above.
+]]--
+
+-- a, the big box:
+--
+-- Remember: above we have \"sdMengerBox(px, py, pz, size, holeWidth)\"
+-- Note: all sizes are \"half-sizes\", so we divide by 2.
+local a = sdMengerBox(x, y, z, 9/2, 3/2)
+
+-- b, little boxes everywhere:
+--
+-- Remember: sdMengerBox(px, py, pz, size, holeWidth)
+-- Note: we use mod() math here with our sdf to make 
+--       a bunch of repeating mini menger boxes
+local b = sdMengerBox(
+	((x + 3/2) % 3) - 3/2,
+	((y + 3/2) % 3) - 3/2,
+	((z + 3/2) % 3) - 3/2,
+	3/2, 1/2
+)
+
+-- 3. Time to get really elaborate!
+--
+-- Now we setup a custom colorwheel to be a subset of the 16 colors
+-- with \"counter_part_colors\" chosen for some symmetry
+--
+-- The colors we will end up working with are: 6,7,9,10,11,13,14
+-- starting at purple and ending over in the blues
+local original_color_wheel = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16}
+local counter_part_color_wheel = {1,2,3,4,5, 8,7,6, 11,10,9, 14,13,12, 16,15}
+
+-- The following periodic number changes with \"y\"
+-- hopefully it stays between 7 and 13
+-- I hope it doesnt run away on us (heh heh)
+local our_periodic_number = (y+3)%7+7 
+if t==0 and x==0 and z==0 then print(our_periodic_number) end
+
+-- Using our periodic number and our custom color wheels
+-- we can setup two colors that change with y
+local color1 = original_color_wheel[our_periodic_number]
+local color2 = counter_part_color_wheel[our_periodic_number]
+
+--[[ 
+	4. Okay! time for the fun part (heh heh)
+
+	Now we go looking for a fun \"mengerspongey-ishy shape\" 
+	using Primitive combinations with our \"sdfs\", \"a\" and \"b\"
+
+	Primitive combinations for two shapes using signed distance functions:
+  	operation Union:        min(a,b)
+  	operation Subtraction:  max(-a,b)
+  	operation Intersection: max(a,b)
+  	operation Xor:          max(min(a,b),-max(a,b))
+
+	For more visual examples of \"primitive combinations\" using \"a\" and \"b\"
+  Comment and Uncomment the \"return\" statements below to see new shapes!
+	
+	Note: make sure to only have one \"return\" statement uncommented
+]]--
+
+--## Our very first example at t==0 is \"basic subtraction\":
+
+--return 
+--t==0 and max(-b,a)<=0 and color1 or
+--t==1 and  demoHelper(\"subtraction_2\", a, b, color1, color2) or
+--t==2 and  demoHelper(\"outer_subtraction_2\", a, b, color1, color2) or
+--t==3 and  demoHelper(\"union\", a, b, color1, color2) or
+--t==4 and  demoHelper(\"outer_union\", a, b, color1, color2) or
+--t==5 and  demoHelper(\"intersection\", a, b, color1, color2) or
+--t==6 and  demoHelper(\"outer_intersection\", a, b, color1, color2) or
+--t==7 and  demoHelper(\"wacky_subtraction_1\", a, b, color1, color2) or
+--t==8 and  demoHelper(\"xor_plus_outer_union\", a, b, color1, color2) or
+--t==9 and  demoHelper(\"subtraction_plus_reversal_subtraction\", a, b, color1, color2)
+--
+--[[ 
+	btw, Did you want to have a look at the shapes \"a\" and \"b\"?
+	
+	Note: because we repeated the sdf shape using mod() math above
+	for \"b\" we must do more mod() math to \"reveal it\" nicely
+]]-- 
+
+--## Have a look at shape \"a\" (one big 9x9x9 mengercube)
+--return a<=0 and PEACH
+
+--## Have a look at shape \"b\" (3x3x3 mengercubes)
+--return b<=0 and (x-2)//3 + (y-2)//3 + (z-2)//3 + 12
+",
 "f1": "-- 310
 -- 152.102
 
@@ -14784,7 +14973,7 @@ not mengerish and y+10
 "id": "sdf-class.weekly",
 "size": 3,
 "source": 400,
-"variant_order": ["_fun_comments", "first_pass", "f1", "f2", "f3", "f4", "s1", "s2", "fast_mainstory", "small_mainstory", "large_comment"]
+"variant_order": ["_fun_comments", "first_pass", "f1", "f2", "f3", "f4", "s1", "s2", "fast_mainstory", "small_mainstory", "large_comment", "code"]
 }, {
 "active_variant": "code",
 "animated": false,
@@ -15433,7 +15622,7 @@ or t and user_code(y,z,x,t~=true)"
 "source": 400,
 "variant_order": ["first_pass_f1", "s1", "s2", "s3a", "s3b", "s4", "s5", "f2", "f3"]
 }, {
-"active_variant": "s2",
+"active_variant": "f2",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 4.75371,
@@ -15747,7 +15936,7 @@ end
 "source": 400,
 "variant_order": ["first_pass", "s1", "s3", "f1", "f2", "f3", "f4", "f5", "f6", "f7"]
 }, {
-"active_variant": "s4",
+"active_variant": "first_pass",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 6.99077,
@@ -17106,7 +17295,7 @@ if y < 1+btoi(t==1) then return t == 1 and BLACK or 1 end"
 "source": 400,
 "variant_order": ["code"]
 }, {
-"active_variant": "f7",
+"active_variant": "first_pass",
 "animated": true,
 "challenge_complete": false,
 "code_instructions": 4.23616,
@@ -17571,12 +17760,40 @@ if z == 2 then return dist == 4 and angle <= (T or t)/6 and t/5+1 end
 "source": 400,
 "variant_order": ["code"]
 }, {
-"active_variant": "f1",
+"active_variant": "s4",
 "animated": true,
 "challenge_complete": false,
 "code_instructions": 9.7994,
 "code_size": 165,
 "code_variants": {
+"code": "xi=0.4014257 -- Angle of inclination of Triton's orbit in radians
+
+function rot_1(point,phi) --Rotates a point relative to the y-axis by phi
+
+ local x1= cos(phi) * point.x + 0    * point.y - sin(phi) * point.z
+ local y1= 0        * point.x + 1    * point.y + 0        * point.z
+ local z1= sin(phi) * point.x + 0    * point.y + cos(phi) * point.z
+ 
+ return {x=x1,y=y1,z=z1}
+
+end
+
+function rot_2(point,theta) --Describe a function that rotates a point relative to the z-axis by theta
+
+ local x2 = point.x
+ local y2 = point.y
+ local z2 = point.z
+ 
+ return {x=x2,y=y2,z=z2}
+
+end
+
+--Centre of Triton
+p = rot_2(rot_1({x=8,y=0,z=5},t*pi/12),xi)
+
+if (x-p.x)^2+(y-p.y)^2+(z-p.z)^2<=2 then
+ return 2
+end",
 "f1": "-- f1
 -- 6427
 -- 11.328
@@ -17991,6 +18208,7 @@ or (x-px*9.2e-1)^2
 ",
 "s4": "-- s4
 -- 165
+--if x==10 and y==10 and z==10 then return BLUE end
 origin_sphere= x*x+y*y+z*z
 px= 9.43*cos(t*pi/12+atan(5/8))
 return
@@ -18004,7 +18222,7 @@ or origin_sphere<=24 and BLUE + btoi(
 or (x-px*9.2e-1)^2 
 	 + (y-px*3.91e-1)^2 
 	 + (z-9.43*cos(t*pi/12-atan(1.6)))^2 <= 2 
-	 and GREY"
+	 and ORANGE"
 },
 "completed": true,
 "fps": 12,
@@ -18012,7 +18230,7 @@ or (x-px*9.2e-1)^2
 "id": "neptune-triton.weekly",
 "size": 10,
 "source": 400,
-"variant_order": ["first_pass", "s1", "s2", "f1", "f2", "f3", "f4", "s3", "s4"]
+"variant_order": ["first_pass", "s1", "s2", "f1", "f2", "f3", "f4", "s3", "s4", "code"]
 }, {
 "active_variant": "s6",
 "animated": false,
@@ -18334,7 +18552,7 @@ return min(x,z)>=8/v1-8 and max(x,z)<8/v1 and v1
 "source": 400,
 "variant_order": ["first_pass", "f1", "f2", "f3", "f4", "f5", "s1", "s2", "s3", "s4", "s5", "s6"]
 }, {
-"active_variant": "f1",
+"active_variant": "first_pass",
 "animated": false,
 "challenge_complete": false,
 "code_instructions": 5.85778,
@@ -18635,7 +18853,7 @@ max(X,Y,Z)==4 and (
 "source": 400,
 "variant_order": ["first_pass"]
 }, {
-"active_variant": "sphere",
+"active_variant": "s2",
 "animated": true,
 "challenge_complete": false,
 "code_instructions": 9.91142,
@@ -19347,7 +19565,7 @@ return y+z==-x and x>=-5 and c
 for k= 1,x+5 do
 	WHITE= WHITE*(11-y-k&15)/k
 end
-return y+z==-x and x>=-5 and WHITE
+return y==-x-z and x>=-5 and WHITE
 ",
 "s5": "-- s5
 -- 35
@@ -19366,5 +19584,2978 @@ return z==-x-y and WHITE
 "size": 10,
 "source": 400,
 "variant_order": ["first_pass", "f1", "s1", "s2", "s3", "s4", "s5"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "--[[ From Wikipedia: Xicalcoliuhqui is a common motif in Mesoamerican art.
+It is composed of three or more steps connected to a hook or spiral,
+reminiscent of a \"greek-key\" meander. Pre-Columbian examples may be
+found on everything from jewelry, masks, ceramics, sculpture, textiles
+and featherwork to painted murals, codices and architectural elements
+of buildings.The motif has been in continual use from the pre-Columbian era
+to the present.]]
+
+if z<7 or y%7==0 then return 2 end
+if y<0 then
+	x=-x
+	y=-y
+end
+return y<x+7 and x<7 and 9 ",
+"first_pass": "--
+--
+--
+
+--[[ From Wikipedia: Xicalcoliuhqui is a common motif in Mesoamerican art.
+It is composed of three or more steps connected to a hook or spiral,
+reminiscent of a \"greek-key\" meander. Pre-Columbian examples may be
+found on everything from jewelry, masks, ceramics, sculpture, textiles
+and featherwork to painted murals, codices and architectural elements
+of buildings.The motif has been in continual use from the pre-Columbian era
+to the present.]]
+Z= abs(z)
+X= abs(x)
+Y= abs(y)
+if (Z<7 and X<7) or y%7==0 then return 2 end
+
+if Z==7 and X<7 then
+	if y<0 then x=-x end
+	if z<0 then x=-x end
+	return Y<x+7 and YELLOW
+end
+
+if X==7 and Z<7 then
+	if y<0 then z=-z end
+  if x>0 then z=-z end
+	return Y<z+7 and YELLOW
+end
+"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "xicalcoliuhqui.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["code", "first_pass"]
+}, {
+"active_variant": "f1",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 14.2878,
+"code_size": 197,
+"code_variants": {
+"f1": "-- f1
+-- 215
+-- 14.288
+if abs(y)>3 then return end
+local X= abs(x)
+if X>3 then return end
+local Z= abs(z)
+if Z>4 then return end
+
+if y==2 then
+  if X<=1 and Z<=3 then return end
+  if X==2 then return YELLOW end
+	if X<2 and Z==4 then return BROWN end
+end
+if y==3 and X<=1 then
+	return Z%2==0 and z~=0 and YELLOW or BROWN
+end
+if y==1 and X<=2 and Z<=3 then return end
+if z==0 and x==3 and (y==1 or y==0) then return BLACK end
+if y==-3 and (X==3 or Z==4) then return YELLOW end
+local Y= abs(y+1)
+if X<=2 and Y<=2 and Z<=3 and y~=-3 then return WHITE end
+if X==3 and Z==4 and Y<3 then return YELLOW end
+if X<=3 and Y<=2 and Z<=4 then return Z==2 and YELLOW or BROWN end
+",
+"first_pass": "-- first_pass
+-- 197
+-- 14.907
+if abs(y)>3 then return end
+local X= abs(x)
+if X>3 then return end
+local Z= abs(z)
+if Z>4 then return end
+local Y= abs(y+1)
+
+return
+y==3 and X<=1 and (Z%2==0 and z~=0 and YELLOW or BROWN)
+or y==2 and (X<=1 and Z<=3 and 0 or X==2 and 9 or X<2 and Z==4 and BROWN)
+or z==0 and (y==1 or y==0) and x==3 and BLACK
+or y==1 and (X<=2 and Z<=3 and 0)
+or X<=2 and Y<=2 and Z<=3 and y~=-3
+or X==3 and Z==4 and Y<3 and YELLOW
+or y==-3 and (X==3 or Z==4) and YELLOW
+or X<=3 and Y<=2 and Z<=4 and (Z==2 and YELLOW or BROWN)
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "treasure-chest.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["first_pass", "f1"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 42.2847,
+"code_size": 199,
+"code_variants": {
+"first_pass": "-- first_pass
+
+m1n= min(x, y, z)
+mx= max(x, y, z)
+if m1n<=-1 then
+	if abs(x)==5 and abs(y)==5 and abs(z)==5
+		 or abs(x-2)==3 and abs(y-2)==3 and abs(z-2)==3 then
+		return WHITE
+	end
+	mx= max(x, y, z)
+	if m1n==-1 and (mx==5 or (x==-1 and y==-1
+												  or x==-1 and z==-1
+		                      or y==-1 and z==-1)) then return ORANGE end
+	if m1n==-5 and (mx==5 or (
+		x==-5 and y==-5
+		or x==-5 and z==-5
+		or y==-5 and z==-5)) or (x==5 and y==5
+												  or x==5 and z==5
+		                      or y==5 and z==5)
+		 then return ORANGE end
+	return (m1n==-1 or m1n==-5 or m1n<=-1 and mx>=5) and DARKBLUE
+end"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "vert-edge-face.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "f3",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 7.3227,
+"code_size": 54,
+"code_variants": {
+"f1": "-- f1
+-- 114
+-- 8.736
+
+if z==-16 then return WHITE end
+
+-- simple negative space early exit
+if x<=-9 or x>=9 or y>=11 or y<=-11 then return end
+
+local i= z/5
+local X= (x-i)^2
+local Y= (y-i*3)^2
+local c= X+Y
+if c>=53 then return end -- early exit on bigger than circle 
+if z==-5 or z==0 or z==5 then
+	if c>=11 then return BLACK end -- black circles on special locations
+end
+if c>5 then return end -- weird tunnel the line happens to go thru
+if x==y//2.9 and y==z//1.5 then return YELLOW end -- the line
+
+-- fancy negative space attempt
+--local slant= z*3/5
+--if slant-8>=y or slant+8<=y then return end
+--slant= z/5
+--if slant-8>=x or slant+8<=x then return end
+",
+"f2": "-- f2
+-- 111
+-- 7.464
+
+if z==-16 then return WHITE end
+
+-- simple negative space early exit
+if x<=-9 or x>=9 or y>=11 or y<=-11 then return end
+
+if z==-5 or z==0 or z==5 then
+	local i= z/5 
+	local X= (x-i)^2 --x_component
+	local Y= (y-i*3)^2 --y_component
+	local c= X+Y --circle
+	if c<=52 and c>=11 then return BLACK end -- black circles on special locations
+	if c>5 then return end -- tiny weird tunnel the line is within
+	end
+if x==y//2.9 and y==z//1.5 then return YELLOW end -- the line
+
+-- Note: finding the intersecting planes for the line was extremely difficult and errorprone.
+-- I didnt have a good way to find it and there was some fiddling and hoping
+
+-- fancy negative space attempt
+--local slant= z*3/5
+--if slant-8>=y or slant+8<=y then return end
+--slant= z/5
+--if slant-8>=x or slant+8<=x then return end
+
+",
+"f3": "-- f3
+-- 174
+-- 7.323
+
+if z==-16 then return WHITE end -- wall
+
+-- simple negative space early exit
+if x<=-9 or x>=9 or y>=11 or y<=-11 then return end
+
+if x==y//2.7 and y==z//1.5 then return YELLOW end -- the line
+
+-- Doing \"the line\" first is expensive but good 
+-- because then we can do this simple bounds check for negative space
+if z>5 or z<-5 then return end
+
+if z==0 then
+	local c= x^2+y^2 --circle
+	if c<=52 and c>=11 then return BLACK end -- black circle on special locations
+	return
+end
+if z==-5 then
+	local X= (x+1)^2 --x_component
+	local Y= (y+3)^2 --y_component
+	local c= X+Y --circle
+	if c<=52 and c>=11 then return BLACK end -- black circle on special locations
+	return
+end
+if z==5 then
+	local X= (x-1)^2 --x_component
+	local Y= (y-3)^2 --y_component
+	local c= X+Y --circle
+	if c<=52 and c>=11 then return BLACK end -- black circle on special locations
+	return
+end
+
+-- Note: finding the intersecting planes for the line was extremely difficult and errorprone.
+-- I didnt have a good way to find it and there was some fiddling and hoping
+
+-- fancy negative space attempt
+--local slant= z*3/5
+--if slant-8>=y or slant+8<=y then return end
+--slant= z/5
+--if slant-8>=x or slant+8<=x then return end
+",
+"first_pass": "-- first_pass
+-- 95
+-- 11.417
+
+if z==-16 then return WHITE end
+
+local i=z/5
+local X= (x-i)^2
+local Y= (y-i*3)^2
+local c= X+Y
+if c>=53 then return end -- early exit on bigger than circle 
+if z==-5 or z==0 or z==5 then
+	if c>=11 then return BLACK end -- black circles on special locations
+end
+if c>5 then return end -- weird tunnel the line happens to go thru
+if x==y//2.9 and y==z//1.5 then return YELLOW end -- the line
+
+-- fancy negative space attempt
+--local slant= z*3/5
+--if slant-8>=y or slant+8<=y then return end
+--slant= z/5
+--if slant-8>=x or slant+8<=x then return end
+",
+"s1": "-- s1
+-- 61
+-- 10.317
+
+return 
+z==-16
+or z%5==0 and abs(z)<6 and inrange((x-z/5)^2+(y-z/5*3)^2,11,52) and BLACK
+or x==y//2.9 and y==z//1.5 and YELLOW
+",
+"s2": "-- s2
+-- 54
+-- 22.480
+
+return
+z==-16
+or ((x-z/5)^2+(y-z*.6)^2-11)//42==tan(z)%tan(5) and BLACK
+or x==y//2.7 and y==z//1.5 and YELLOW
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "shadowplay.weekly",
+"size": 16,
+"source": 400,
+"variant_order": ["first_pass", "s1", "s2", "f1", "f2", "f3"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 6.71117,
+"code_size": 159,
+"code_variants": {
+"first_pass": "-- first_pass
+-- 182
+-- 6.711
+
+if y>6 then return end -- negative space above box
+if x>4 or x<-4 or z>3 or z<-3 then return end -- negative space around box
+if y>-5 then -- the box
+	if y==6 or y==-4 then return RED end
+	-- if x<4 and x>-4 and z<2 and z>-3 then return end -- negative space internal
+	if y==4 then
+		if x<4 and x>-4 then
+			if z==2 then return GREY end
+			if z==3 then return end
+		end
+	end
+	if z==3 then	
+		if (y==1 or y==-1) and (x<3 and x>-3) then return WHITE end
+		if x==0 and (y==-2 or y==-3) then return WHITE end
+	end
+	if x==-4 or x==4 then return RED end
+	if z==-3 or z==3 then return RED end
+	return
+end
+if x>1 or x<-1 or z>1 or z<-1 then return end
+if z~=0 and (x==-1 or x==1) then return end 
+return BLACK
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "japanese-post.weekly",
+"size": 8,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "s1",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 9.63244,
+"code_size": 261,
+"code_variants": {
+"first_pass": "-- first_pass
+-- 302
+-- 9.632
+
+if y>0 then return end-- negative space
+
+if x==0 and z==0 then return BLACK end -- the tunnel downward
+
+-- the hill, grass and dirt
+if y==-4 then return BROWN end
+if y>-4 and x^2+z^2<(y-2)^2 then return BROWN end
+if y==-3 then return GREEN end
+
+if x>0 and z>=-3 and z<=3 and y<=-7 then -- hill_big
+	if x<=9 then
+		if y==-10 and z==0 then return BLACK end
+		if x>=3 then
+			local hill3= (x-6)^2+z^2
+			if hill3<14 and hill3<(y+6)^2 then return BLACK end
+		end
+	end
+end
+if z>0 and x>=-2 and x<=2 and y<=-7 and y>=-9 then -- hill_medium
+	if z<=8 then
+		if y==-9 and x==0 then return BLACK end
+		if z>=4 then
+			local hill2= x^2+(z-6)^2
+			if hill2<9 and hill2<(y+6)^2 then return BLACK end
+		end
+	end
+end
+if x<0 and z>=-1 and z<=1 and y<-6 and y>-9 then -- hill_small
+	if x>=-7 then
+		if y==-8 and z==0 then return BLACK end
+		if x<=-5 then
+			local hill1= (x+6)^2+z^2
+			if hill1<3 and hill1<(y+6)^2 then return BLACK end
+		end
+	end
+end
+if z<0 and x==0 and y==-7 and z>=-6 then return BLACK end -- line1
+",
+"s1": "-- s1
+-- 261
+-- 14.019
+
+function hill(a,a_max,b,b_h,c,a_min,offset1,offset2,cutoff)
+	if a<=a_max then
+		if b==b_h and c==0 then return BLACK end
+		if a>=a_min then
+			h= (x+offset1)^2+(z+offset2)^2
+			if h<cutoff and h<(y+6)^2 then return BLACK end
+		end
+	end
+end
+
+-- hill(x,9,y,-10,z,3,-6,0,14)
+--if x>0 and z>=-3 and z<=3 and y<=-7 then -- hill_big
+--	if x<=9 then
+--		if y==-10 and z==0 then return BLACK end
+--		if x>=3 then
+--			local hill3= (x-6)^2+z^2
+--			if hill3<14 and hill3<(y+6)^2 then return BLACK end
+--		end
+--	end
+--end
+-- hill(z,8,y,-9,x,4,0,-6,9)
+--if z>0 and x>=-2 and x<=2 and y<=-7 and y>=-9 then -- hill_medium
+--	if z<=8 then
+--		if y==-9 and x==0 then return BLACK end
+--		if z>=4 then
+--			local hill2= x^2+(z-6)^2
+--			if hill2<9 and hill2<(y+6)^2 then return BLACK end
+--		end
+--	end
+--end
+--hill(x,-7,y,-8,z,-5,6,0,3)
+--if x<0 and z>=-1 and z<=1 and y<-6 and y>-9 then -- hill_small
+--	if x>=-7 then
+--		if y==-8 and z==0 then return BLACK end
+--		if x<=-5 then
+--			local hill1= (x+6)^2+z^2
+--			if hill1<3 and hill1<(y+6)^2 then return BLACK end
+--		end
+--	end
+--end
+--
+return 
+y>0 and 0 -- negative space
+or 
+x==0 and z==0 and BLACK -- the tunnel downward
+or
+y==-4 and BROWN -- dirt
+or
+y>-4 and x^2+z^2<(y-2)^2 and BROWN -- anthill
+or
+y==-3 and GREEN -- grass
+or 
+z<0 and x==0 and y==-7 and z>=-6 and BLACK -- line1
+or 
+x>0 and z>=-3 and z<=3 and y<=-7 and hill(x,9,y,-10,z,3,-6,0,14) -- hill_big
+or
+z>0 and x>=-2 and x<=2 and y<=-7 and y>=-9 and hill(z,8,y,-9,x,4,0,-6,9) -- hill_medium
+or
+x<0 and z>=-1 and z<=1 and y<-6 and y>-9 and hill(-x,7,y,-8,z,-5,6,0,3) -- hill_small
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "anthill.weekly",
+"size": 10,
+"source": 400,
+"variant_order": ["first_pass", "s1"]
+}, {
+"active_variant": "f3",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 4.99863,
+"code_size": 224,
+"code_variants": {
+"f1": "--f1 -- some swapping
+--234 
+--6.981
+if z~=0 then return end -- negative space, return early
+
+-- color array (in this case \"a\" is a table)
+local a= nil
+if t>=11 then 
+	a= {WHITE,GREY,BLACK,PEACH,PINK,PURPLE,RED,ORANGE,EMPTY}
+else
+	a= {ORANGE,RED,PURPLE,PINK,PEACH,BLACK,GREY,WHITE,EMPTY}
+	-- do all the swaps we need, in the correct order
+	if t>=1 then a[1],a[2]= a[2],a[1] end
+	if t>=2 then a[3],a[4]= a[4],a[3] end
+	if t>=3 then a[5],a[6]= a[6],a[5] end
+	if t>=4 then a[7],a[8]= a[8],a[7] end
+	--
+	if t>=6 then a[1],a[2],a[3],a[4]= a[3],a[4],a[1],a[2] end
+	--
+	if t>=8 then a[5],a[6],a[7],a[8]= a[7],a[8],a[5],a[6] end
+end
+if y+4<a[x+5] then return a[x+5] end -- display()
+",
+"f2": "--f2 -- hardcoded
+--230
+--5.125
+if z~=0 or y==4 or x==4 then return end -- negative space, return early
+
+local a= nil
+if t>=11 then 
+	a= {WHITE,GREY,BLACK,PEACH,PINK,PURPLE,RED,ORANGE}
+elseif t>=8 and t<=10 then
+	a= {PINK,PURPLE,RED,ORANGE,WHITE,GREY,BLACK,PEACH}
+elseif t>=6 and t<=7 then
+	a= {PINK,PURPLE,RED,ORANGE,BLACK,PEACH,WHITE,GREY}
+elseif t==5 or t==4 then
+	a= {RED,ORANGE,PINK,PURPLE,BLACK,PEACH,WHITE,GREY}
+elseif t==3 then
+	a= {RED,ORANGE,PINK,PURPLE,BLACK,PEACH,GREY,WHITE}
+elseif t==2 then
+	a= {RED,ORANGE,PINK,PURPLE,PEACH,BLACK,GREY,WHITE}
+elseif t==1 then
+	a= {RED,ORANGE,PURPLE,PINK,PEACH,BLACK,GREY,WHITE}
+else -- t==0
+	a= {ORANGE,RED,PURPLE,PINK,PEACH,BLACK,GREY,WHITE}
+end
+
+if y+4<a[x+5] then return a[x+5] end -- display()
+",
+"f3": "--f3 -- hardcoded optimized
+--224
+--4.999
+
+if z~=0 or y==4 or x==4 then return end -- negative space, return early
+
+local a
+if t>=11 then
+	a= {WHITE,GREY,BLACK,PEACH,PINK,PURPLE,RED,ORANGE}
+elseif t>=8 then -- and t<=10
+	a= {PINK,PURPLE,RED,ORANGE,WHITE,GREY,BLACK,PEACH}
+elseif t>=6 then -- and t<=7
+	a= {PINK,PURPLE,RED,ORANGE,BLACK,PEACH,WHITE,GREY}
+elseif t==5 or t==4 then
+	a= {RED,ORANGE,PINK,PURPLE,BLACK,PEACH,WHITE,GREY}
+elseif t==3 then
+	a= {RED,ORANGE,PINK,PURPLE,BLACK,PEACH,GREY,WHITE}
+elseif t==2 then
+	a= {RED,ORANGE,PINK,PURPLE,PEACH,BLACK,GREY,WHITE}
+elseif t==1 then
+	a= {RED,ORANGE,PURPLE,PINK,PEACH,BLACK,GREY,WHITE}
+else -- t==0
+	a= {ORANGE,RED,PURPLE,PINK,PEACH,BLACK,GREY,WHITE}
+end
+
+local v= a[x+5]
+local Y= y+4
+if Y<v then return v end -- display()
+",
+"first_pass": "--first_pass -- all swaps
+--231 
+--8.258
+if z~=0 then return end -- negative space, return early
+
+-- color array (in this case \"a\" is a table)
+local a= {ORANGE,RED,PURPLE,PINK,PEACH,BLACK,GREY,WHITE}
+
+-- do all the swaps we need, in the correct order
+if t>=1 then a[1],a[2]= a[2],a[1] end
+if t>=2 then a[3],a[4]= a[4],a[3] end
+if t>=3 then a[5],a[6]= a[6],a[5] end
+if t>=4 then a[7],a[8]= a[8],a[7] end
+--
+if t>=6 then a[1],a[2],a[3],a[4]= a[3],a[4],a[1],a[2] end
+--
+if t>=8 then a[5],a[6],a[7],a[8]= a[7],a[8],a[5],a[6] end
+--
+if t>=11 then sort(a) end
+--append EMPTY so we can display the data
+-- Note: faster than using \" insert(a,EMPTY) \"
+a[9]=EMPTY 
+if y+4<a[x+5] then return a[x+5] end -- display()
+"
+},
+"completed": true,
+"fps": 4,
+"frames": 16,
+"id": "xor-sort.weekly",
+"size": 4,
+"source": 400,
+"variant_order": ["first_pass", "f1", "f2", "f3"]
+}, {
+"active_variant": "f4",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 9.2428,
+"code_size": 21,
+"code_variants": {
+"f1": "--f1
+--29
+--12.519
+local v= x+y+z
+if v>4 then return end
+return
+9-max(-x,y,-z)*maxinteger
+",
+"f2": "--f2
+--32
+--11.683
+local v= x+y+z
+if v>4 then return end
+local mn= min(x,-y,z)
+return
+mn*maxinteger+9
+",
+"f3": "--f3
+--67
+--10.576
+
+local v= x+y+z
+if v>4 then return end
+if y>=-x and y>=-z then
+	if y%2==0 then
+		return y+9
+	end
+	return
+end
+if x<=z then
+	if x%2==0 then
+		return 9-x
+	end
+	return
+end
+if z%2==0 then
+	return 9-z
+end
+",
+"f4": "--f4
+--71
+--9.407
+if y>=-x and y>=-z then
+	local v= x+y+z
+	if v>4 then return end
+	if y%2==0 then
+		return y+9
+	end
+	return
+end
+if x<=z then
+	if x%2==0 then
+		return 9-x
+	end
+	return
+end
+if z%2==0 then
+	return 9-z
+end
+",
+"f5": "--f5
+--69
+--9.243
+
+if y>=-x and y>=-z then
+	if y%2==0 then
+		if x+y+z>4 then return end -- GREEN end
+		return y+9
+	else return end
+end
+if x<=z then
+	if x%2==0 then
+		return 9-x
+	else return end
+end
+if z%2==0 then
+	return 9-z
+end
+
+-- Note: After expanding my \"elseif\" statements into \"if\" statements 
+-- I was finally able to spot a place I could save time
+-- Usually I change my elseif's into \"if\"s just to be typing and moving things around
+-- This is the first time it actually shed light on how I could move things to save time.
+",
+"first_pass": "--first_pass
+--91
+--14.347
+
+local mx= max(-x+5,y+5,-z+5)
+if mx==9 and x<=-z then return BLUE end
+if mx==7 and x-2<=-z then return GREEN end
+if mx==5 and x-4<=-z then return YELLOW end
+if mx==3 and x-6<=-z then return RED end
+if mx==1 and x-8<=-z then return PINK end",
+"s1": "--s1
+--39
+--17.472
+
+mx= max(-x+4,y+4,-z+4)
+if mx%2==0 and x-(8-mx)<=-z then
+	return mx+5
+end
+",
+"s2": "--s1
+--37
+--17.472
+
+v= max(-x+4,y+4,-z+4)
+if v%2==0 and x<=8-z-v then 
+	return v+5
+end
+",
+"s3": "--s3
+--35
+--17.889
+
+v= max(-x+4,y+4,-z+4)
+return v%2==0 and x<=8-z-v and v+5
+",
+"s4": "--s4
+--49
+--17.889
+
+v= {-x+4,y+4,-z+4} sort(v)
+mn,m,mx= unpack(v)
+if mx%2==0 and x<=8-z-mx then return mx+5 end
+",
+"s4b": "--s4b
+--44
+--26.683
+
+v= {x,-y,z} sort(v)
+mn,m,mx= unpack(v)
+if x+y+z<=4 then
+	return (9-mn)%2*(9-mn)
+end
+",
+"s5": "--s5
+--26
+--17.242
+
+v= 9-min(x,-y,z)
+return
+x+y+z<=4 and v%2*v
+",
+"s6": "--s6
+--21
+--12.683
+return
+x+y+z<=4 and min(x,-y,z)*maxinteger+9
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "box-shells.weekly",
+"size": 4,
+"source": 400,
+"variant_order": ["first_pass", "s1", "s2", "s3", "s4", "s4b", "s5", "s6", "f1", "f2", "f3", "f4", "f5"]
+}, {
+"active_variant": "f2",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 5.50729,
+"code_size": 41,
+"code_variants": {
+"f1": "--f1
+--92
+--5.569
+
+if z>1 or z<-1 then return end -- negative space
+if y>2 or y<-2 then return end -- negative space
+
+if z==1 and y>=-1 and y<=1 then
+	if x==-2 then return t<<x//2+1&4~3 end
+	if x==0 then return t<<x//2+1&4~3 end
+	if x==2 then return t<<x//2+1&4~3 end  
+end
+return DARKBLUE",
+"f2": "--f2
+--90
+--5.507
+
+if z>1 or z<-1 then return end -- negative space
+if y>2 or y<-2 then return end -- negative space
+
+if z==1 and y>=-1 and y<=1 then -- inside the display segments
+	if x==-2 then -- segment1
+		if t<=3 then return BLACK end
+		return RED
+	end
+	if x==0 then -- segment2
+		if t&2==0 then return BLACK end
+		return RED
+	end
+	if x==2 then -- segment3
+		if t&1==0 then return BLACK end
+		return RED
+	end
+end
+return DARKBLUE -- the rest of the clanker
+",
+"first_pass": "--first_pass
+--150
+--6.465
+
+if z>1 or z<-1 then return end -- negative space
+if y>2 or y<-2 then return end -- negative space
+if z<1 then return DARKBLUE end -- back half
+if y>1 or y<-1 then return DARKBLUE end -- upper and lower lines
+if x%2==1 then return DARKBLUE end -- odd lines
+
+if t>0 then
+	-- lookup table for t, 1 to 7
+	local L= {
+		{3,3,7}, --t==1
+		{3,7,3}, --t==2
+		{3,7,7}, --t==3
+		{7,3,3}, --t==4
+		{7,3,7}, --t==5
+		{7,7,3}, --t==6
+		{7,7,7} --t==7
+	}
+	-- poormans ceiling function with fewer assignments
+	local val= (x+3)/2
+	local frac= val%1
+  if frac>0 then
+  	return L[t][val-frac+1]
+  else
+		return L[t][val-frac]
+  end
+end
+
+return BLACK -- t==0
+",
+"s1": "--s1
+--45
+--9.682
+
+if abs(z)>1 or abs(y)>2 then return end 
+return
+abs(y)<2 and z==1 and x%2==0 
+and 
+t<<x//2+1&4~3
+or
+DARKBLUE
+",
+"s2": "--s2
+--43
+--9.927
+
+if abs(z)>1 or abs(y)>2 then return end
+return
+abs(y)<2 and z==1+x%2
+and
+t<<x//2+1&4~3
+or
+DARKBLUE
+",
+"s3": "--s3
+--41
+--10.901
+
+return
+abs(z)<=1 and abs(y)<=2 and (
+	abs(y)<2 and z==1+x*mininteger
+	and
+	t<<x//2+1&4~3
+	or
+	DARKBLUE
+)
+",
+"s4": "--s4
+--41
+--10.901
+
+return
+abs(z)<=1 and abs(y)<=2 and (
+	z==1+x*mininteger+abs(y)//2
+	and
+	t<<x//2+1&4~3
+	or
+	DARKBLUE
+)
+"
+},
+"completed": true,
+"fps": 2,
+"frames": 8,
+"id": "bitwise-display.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["first_pass", "s1", "s2", "s3", "s4", "f1", "f2"]
+}, {
+"active_variant": "code",
+"animated": true,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 4,
+"frames": 4,
+"id": "zig-zag.weekly",
+"size": 4,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "f1",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 4.32,
+"code_size": 45,
+"code_variants": {
+"f1": "--f1
+--61
+--4.172
+if z~=0 then return end
+if y==2 or y==-2 then return BLUE end
+if x==2 or x==-2 then return BLUE end
+if t==0 then
+	if y==-abs(x) then return WHITE end
+else 
+	if y==abs(x) then return WHITE end
+end
+return BLUE
+",
+"first_pass": "--first_pass
+--45
+--4.320
+if z~=0 then return end
+if t==0 then 
+	if y>-2 and y==-abs(x) then return WHITE end
+else 
+	if y<2 and y==abs(x) then return WHITE end
+end
+return BLUE
+"
+},
+"completed": true,
+"fps": 3,
+"frames": 2,
+"id": "ez-bird.weekly",
+"size": 2,
+"source": 400,
+"variant_order": ["first_pass", "f1"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "if max(abs(x),abs(z+1.5))<=2 and y<=z+3 then
+  if x>0 then return ORANGE
+	elseif x<0 then return BROWN
+  else return WHITE
+	end
+end
+"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "calico-cat.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "s2",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 17.7487,
+"code_size": 201,
+"code_variants": {
+"f1": "-- f1
+-- Using: z-symmetry trick
+-- 269
+-- 408.664
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+function capsule(ax,ay,az,bx,by,bz,radius)
+
+	-- dx,dy,dz is \"going from a to b\"
+	dx = bx-ax
+	dy = by-ay
+	dz = bz-az
+	
+	-- length of the line seqment
+	length = sqrt(dx*dx+dy*dy+dz*dz)
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	dx = dx / length
+	dy = dy / length
+	dz = dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	px = x - ax
+	py = y - ay
+	pz = abs(z) - az
+	
+	-- project p onto the line segment with dot product
+	dot = dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	dot = clamp(dot, 0, length)
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	cx = ax + dx*dot
+	cy = ay + dy*dot
+	cz = az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	cdx = x - cx
+	cdy = y - cy
+	cdz = abs(z) - cz
+	
+	distance = sqrt(cdx*cdx+cdy*cdy+cdz*cdz)
+	
+	-- return true if distance is <= radius
+	return distance<=radius
+	
+end
+
+-- example capsule going from (3,3,3) to (-3,-3,-3) with a radius
+-- of 4.5
+--return capsule(3,3,3,-3,-3,-3,4.5)
+
+return
+x==-6 and 
+(
+	(y-1.5)^2+(z-2.5)^2<=1 or (y-1.5)^2+(z+2.5)^2<=1
+) and  BLACK
+or
+capsule(-3,0,0,  3,0,0,  4.5)
+or
+capsule(-4,3,2,  -2,6,2,  1.5)
+or
+capsule(-5,-6,2,  -3,-3,2,  1.5)
+or
+capsule(5,-6,2,  3,-3,2,  1.5)",
+"f1b": "-- f1b
+-- Using: \"local\", ^.5 for sqrt() trick, and z-symmetry
+-- 286
+-- 233.312
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+local function capsule(ax,ay,az,bx,by,bz,radius)
+
+	-- dx,dy,dz is \"going from a to b\"
+	local dx= bx-ax
+	local dy= by-ay
+	local dz= bz-az
+	
+	-- length of the line seqment
+	local length = (dx*dx+dy*dy+dz*dz)^.5
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	local dx= dx / length
+	local dy= dy / length
+	local dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	local px= x - ax
+	local py= y - ay
+	local pz= abs(z) - az
+	
+	-- project p onto the line segment with dot product
+	local dot= dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	dot= clamp(dot, 0, length)
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	local cx= ax + dx*dot
+	local cy= ay + dy*dot
+	local cz= az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	local cdx= x - cx
+	local cdy= y - cy
+	local cdz= abs(z) - cz
+	
+	-- distance = (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+	-- return true if distance is <= radius
+	return (cdx*cdx+cdy*cdy+cdz*cdz)^.5 <= radius
+end
+
+-- example capsule going from (3,3,3) to (-3,-3,-3) with a radius
+-- of 4.5
+--return capsule(3,3,3,-3,-3,-3,4.5)
+
+return
+x==-6 and 
+(
+	(y-1.5)^2+(z-2.5)^2<=1 or (y-1.5)^2+(z+2.5)^2<=1
+) and  BLACK
+or
+capsule(-3,0,0,  3,0,0,  4.5) -- body
+or
+capsule(-4,3,2,  -2,6,2,  1.5) -- ears
+or
+capsule(-5,-6,2,  -3,-3,2,  1.5) -- front legs
+or
+capsule(5,-6,2,  3,-3,2,  1.5) -- back legs
+",
+"f2": "-- f2
+-- Using: 
+	-- negative space early exits
+	-- add \"local\" keyword for vars in luajit
+	-- ^.5 for sqrt() trick
+	-- z-symmetry with \"z= abs(z)\"
+	-- inline clamp() function
+	-- externalize radius trick
+	-- x-symmetry with \"x= abs(x)\"
+	-- old_x trick for x-symmetry
+	-- range checks faster than squaring trick
+-- 291
+-- 80.096
+
+-- andxyz-debug-toggle® use while working
+--if x==7 and y==7 and z==7 then 
+--	return BLACK 
+--end
+
+if z<-4 or z>4 then return end -- negative space
+z= abs(z) -- z-symmetry trick
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+--local function capsule(ax,ay,az,bx,by,bz,radius)
+-- externalize radius trick
+local function capsule(ax,ay,az,bx,by,bz)
+	-- dx,dy,dz is \"going from a to b\"
+	local dx= bx-ax
+	local dy= by-ay
+	local dz= bz-az
+	
+	-- length of the line seqment
+	-- apply sqrt() trick
+	local length= (dx*dx+dy*dy+dz*dz)^.5
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	local dx= dx / length
+	local dy= dy / length
+	local dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	local px= x - ax
+	local py= y - ay
+	local pz= z - az
+	
+	-- project p onto the line segment with dot product
+	local dot= dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	
+	--dot= clamp(dot, 0, length)
+	-- inline clamp() function call
+	if dot<0 then dot= 0 end
+	if dot>length then dot= length end
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	local cx= ax + dx*dot
+	local cy= ay + dy*dot
+	local cz= az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	local cdx= x - cx
+	local cdy= y - cy
+	local cdz= z - cz
+	
+	--distance = (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+	-- return true if distance is <= radius
+	-- apply sqrt() trick
+	--return (cdx*cdx+cdy*cdy+cdz*cdz)^.5 <= radius
+	return (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+end
+
+-- example capsule going from (3,3,3) to (-3,-3,-3) with a radius
+-- of 4.5
+--return capsule(3,3,3,-3,-3,-3,4.5)
+
+-- eyes
+-- Apply range checks, they are faster than squaring
+-- (remember: we only need concern ourselves with z>0, 
+-- the symmetry trick takes care of the rest)
+if x==-6 and y<=2 and y>=1 and z>=2 and z<=3 then
+	return BLACK 
+end
+
+-- body
+if capsule(-3,0,0, 3,0,0)<=4.5 then return WHITE end
+
+-- front legs and back legs
+local old_x= x
+x= abs(x) -- x-symmetry trick
+if capsule(5,-6,2, 3,-3,2)<=1.5  then return WHITE end
+
+-- ears
+x= old_x
+if capsule(-4,3,2, -2,6,2)<=1.5 then return WHITE end
+",
+"f3": "-- f3
+-- List of tricks we are applying: 
+	-- negative space early exits
+	-- Add \"local\" keyword for non global \"functions\" and \"vars\" in luajit
+	-- ^.5 for sqrt() trick
+	-- z-symmetry but dont use abs()
+	-- inline clamp() function
+	-- externalize radius trick
+	-- x-symmetry but dont use abs()
+	-- old_x trick for x-symmetry (needed for ears)
+	-- range checks faster than squaring trick
+	-- yz-circle trick, instead of capsule for body
+	-- chaotic y>0 symmetry flip for ears
+-- 413
+-- 30.025
+
+-- andxyz-debug-toggle® use while working and debugging
+--if x==7 and y==7 and z==7 then 
+--	return BLACK
+--end
+
+if z<-4 or z>4 then return end -- negative space
+if z<0 then z=-z end -- z-symmetry trick
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+--local function capsule(ax,ay,az,bx,by,bz,radius)
+-- externalize radius trick
+local function capsule(ax,ay,az,bx,by,bz)
+	-- chaotic \"y\" greater-than-zero symmetry flip:
+	--	if y>0 then x= -old_x+1; ay,by = -by,-ay end -- chaotic y>0 symmetry flip
+	if y>0 then -- ears trick
+		if old_x>0 then return GREEN end -- not sure why this needs to be a non-zero color
+		ax,bx= ax-1,bx-1
+		ay,by= -by,-ay
+	end
+	
+	-- dx,dy,dz is \"going from a to b\"
+	local dx= bx-ax
+	local dy= by-ay
+	local dz= bz-az
+	
+	-- length of the line seqment
+	-- apply sqrt() trick
+	local length= (dx*dx+dy*dy+dz*dz)^.5
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	local dx= dx / length
+	local dy= dy / length
+	local dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	local px= x - ax
+	local py= y - ay
+	local pz= z - az
+	
+	-- project p onto the line segment with dot product
+	local dot= dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	
+	--dot= clamp(dot, 0, length)
+	-- inline clamp() function call
+	if dot<0 then dot= 0 end
+	if dot>length then dot= length end
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	local cx= ax + dx*dot
+	local cy= ay + dy*dot
+	local cz= az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	local cdx= x - cx
+	local cdy= y - cy
+	local cdz= z - cz
+	
+	--distance = (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+	-- return true if distance is <= radius
+	-- apply sqrt() trick
+	--return (cdx*cdx+cdy*cdy+cdz*cdz)^.5 <= radius
+	return (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+end
+
+-- example capsule going from (3,3,3) to (-3,-3,-3) with a radius
+-- of 4.5
+--return capsule(3,3,3,-3,-3,-3,4.5)
+
+-- eyes
+-- Apply range checks, they are faster than squaring
+-- (remember: we only need concern ourselves with z>0, 
+-- the symmetry trick takes care of the rest)
+if x==-6 and y<=2 and y>=1 and z>=2 and z<=3 then
+	return BLACK
+end
+
+-- body
+-- yz-circle with x-symmetry tricks:
+--if capsule(-3,0,0, 3,0,0)<=4.5 then return WHITE end
+old_x= x
+if x<0 then x=-x end -- x-symmetry trick for body and feet
+if x<=3 then
+	local c= y^2+z^2
+	if c<=20 then return WHITE end
+end
+if x==4 then
+	local c= y^2+z^2
+	if c<=18 then return WHITE end
+end
+if x==5 then
+	local c= y^2+z^2	
+	if c<=16 then return WHITE end
+end
+if x==6 then
+	local c= y^2+z^2	
+	if c<=10 then return WHITE end
+end
+if x==7 then
+	local c= y^2+z^2	
+	if c<=4 then return WHITE end
+end
+
+
+if capsule(5,-6,2, 3,-3,2)<=1.5 then return WHITE end -- front legs, back legs, and ears
+
+-- oldstyle ears
+--if capsule(4, 3,2, 2, 6,2)<=1.5 then return WHITE end
+",
+"f4": "-- f4
+-- List of tricks we applied in order:
+	-- Note: sometimes tricks cancel each other out 
+	-- negative space early exits
+	-- Add \"local\" keyword for non global \"functions\" and \"vars\" in luajit
+	-- ^.5 for sqrt() trick
+	-- z-symmetry but dont use abs()
+	-- inline clamp() function
+	-- externalize radius trick
+	-- x-symmetry but dont use abs()
+	-- old_x trick for x-symmetry (needed for ears)
+	-- range checks faster than squaring trick
+	-- yz-circle trick, instead of capsule for body
+	-- chaotic y>0 symmetry flip for ears
+	-- We got it down to one function call of capsule, so...
+	--   scrap the function and re-inline the radius check
+-- 403
+-- 26.110
+
+-- andxyz-debug-toggle® use while working and debugging
+-- to avoid \"perfect match!\"
+--if x==7 and y==7 and z==7 then 
+--	return BLACK
+--end
+
+if z<-4 or z>4 then return end -- negative space
+if z<0 then z= -z end -- z-symmetry trick
+
+-- eyes
+-- Apply range checks, they are faster than squaring
+-- (remember: we only need concern ourselves with z>0, 
+-- the symmetry trick takes care of the rest)
+if x==-6 and y<=2 and y>=1 and z>=2 and z<=3 then
+	return BLACK
+end
+
+-- body
+-- yz-circle with x-symmetry tricks:
+-- orignal body: if capsule(-3,0,0, 3,0,0)<=4.5 then return WHITE end
+local old_x= x
+if x<0 then x= -x end -- x-symmetry trick for body and feet
+if x<=3 then
+	local yz_circ= y^2+z^2
+	if yz_circ<=20 then return WHITE end
+end
+if x==4 then
+	local c= y^2+z^2
+	if c<=18 then return WHITE end
+end
+if x==5 then
+	local c= y^2+z^2	
+	if c<=16 then return WHITE end
+end
+if x==6 then
+	local c= y^2+z^2	
+	if c<=10 then return WHITE end
+end
+if x==7 then
+	local c= y^2+z^2	
+	if c<=4 then return WHITE end
+end
+
+-- oldstyle one function call:
+--if capsule(5,-6,2, 3,-3,2)<=1.5 then return WHITE end -- front legs, back legs, and ears
+
+-- oldstyle solo ears
+--if capsule(4, 3,2, 2, 6,2)<=1.5 then return WHITE end
+
+-- inline our function:
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+--local function capsule(ax,ay,az,bx,by,bz,radius)
+local ax= 5
+local ay= -6
+local az= 2
+local bx= 3
+local by= -3
+local bz= 2
+--local function capsule(ax,ay,az,bx,by,bz) -- externalize radius trick
+	
+	-- chaotic \"y\" greater-than-zero symmetry flip:
+	--	if y>0 then x= -old_x+1; ay,by = -by,-ay end -- chaotic y>0 symmetry flip
+	if y>0 then -- ears trick
+		if old_x>0 then return end -- not sure why this needs to be a non-zero color
+		ax,bx= ax-1,bx-1
+		ay,by= -by,-ay
+	end
+	
+	-- dx,dy,dz is \"going from a to b\"
+	local dx= bx-ax
+	local dy= by-ay
+	local dz= bz-az
+	
+	-- length of the line seqment
+	-- apply sqrt() trick
+	local length= (dx*dx+dy*dy+dz*dz)^.5
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	local dx= dx / length
+	local dy= dy / length
+	local dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	local px= x - ax
+	local py= y - ay
+	local pz= z - az
+	
+	-- project p onto the line segment with dot product
+	local dot= dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	
+	--dot= clamp(dot, 0, length)
+	-- inline clamp() function call
+	if dot<0 then dot= 0 end
+	if dot>length then dot= length end
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	local cx= ax + dx*dot
+	local cy= ay + dy*dot
+	local cz= az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	local cdx= x - cx
+	local cdy= y - cy
+	local cdz= z - cz
+	
+	--distance = (cdx*cdx+cdy*cdy+cdz*cdz)^.5
+	-- return true if distance is <= radius
+	-- apply sqrt() trick
+	--return (cdx*cdx+cdy*cdy+cdz*cdz)^.5 <= radius
+	return (cdx*cdx+cdy*cdy+cdz*cdz)^.5 <= 1.5
+--end",
+"f5": "-- f5
+-- List of tricks we applied to original solution in order:
+	-- Note: sometimes tricks can cancel each other out 
+	-- negative space early exits
+	-- Add \"local\" keyword for non global \"functions\" and \"vars\" in luajit
+	-- ^.5 instead of sqrt() trick
+	-- z-symmetry but dont use abs()
+	-- inline the clamp() function
+	-- externalize radius check trick
+	-- x-symmetry but dont use abs()
+	-- old_x trick for x-symmetry (old_x is needed for ears, but not for feet)
+	-- eyes test can use range checks, faster than squaring
+	-- yz-circle trick, instead of calling capsule function for body
+	-- yz-circle trick, with early exits per slice
+	-- rework eyes test into slice==6 of yz-circle tests
+	-- chaotic y>0 x-symmetry inverty flip for ears
+	-- We got it down to one function call of capsule, so...
+	--   scrap the function and re-inline the radius check
+	-- rework the entire function to be shorter via \"maths\"
+	-- rework final distance test into per component check, then do sqrt
+-- 468
+-- 17.749
+
+-- andxyz-debug-toggle® use while working and debugging
+-- to avoid \"perfect match!\"
+--if x==7 and y==7 and z==7 then 
+--	return BLACK
+--end
+
+if z<-4 or z>4 then return end -- negative space, z cull
+if y>4 and x>0 then return end -- negative space, above back
+if y<-4 and (x>-3 and x<3) then return end -- negative space, between legs
+if y>2 and (x<-3 and x<y-9 or x==7) then return end -- negative space, infront of ears above nose
+if y<-2 and (x==7 or x==-7) then return end -- negative space, under front and back
+if z==0 and (y>4 or y<-4) then return end -- negative space, inbetween legs and ears on z
+
+if z<0 then z= -z end -- z-symmetry trick
+
+-- body:
+-- yz-circle with x-symmetry tricks and early exits per slice
+-- original body: if capsule(-3,0,0, 3,0,0)<=4.5 then return WHITE end
+local old_x= x
+if x<0 then x= -x end -- x-symmetry trick for body and feet
+if x<=3 then
+	local yz_circ= y^2+z^2
+	if yz_circ<=20 then return WHITE end
+	if old_x>=0 and x~=3 then return end
+end
+if x==4 then
+	local c= y^2+z^2
+	if c<=18 then return WHITE end
+end
+if x==5 then
+	local c= y^2+z^2	
+	if c<=16 then return WHITE end
+end
+if x==7 then
+	local c= y^2+z^2	
+	if c<=4 then return WHITE end
+	return
+end
+if x==6 then
+	-- eyes:
+	-- Apply range checks, they are faster than squaring
+	-- (remember: we only need concern ourselves with z>0, 
+	-- the z-symmetry trick takes care of the rest)
+	if old_x==-6 and y<=2 and y>=1 and z>=2 and z<=3 then
+		return BLACK
+	end
+	-- back to body calcs:
+	local c= y^2+z^2	
+	if c<=10 then return WHITE end
+end
+
+-- oldstyle one-function call does it all for all legs and ears:
+--if capsule(5,-6,2, 3,-3,2)<=1.5 then return WHITE end -- front legs, back legs, and ears
+
+-- even older style for just solo ears:
+--if capsule(4, 3,2, 2, 6,2)<=1.5 then return WHITE end
+
+-- front legs, back legs, and ears:
+-- inline our one-function call to capsule() thanks to all the symmetry:
+local ax= 5
+local bx= 3
+local ay= -6
+local by= -3
+--local function capsule(ax,ay,az,bx,by,bz) -- with externalize radius trick unapplied
+	if y>0 then -- mirror'd ears trick
+		if old_x>0 then return end -- upper ears mirror'd on the bum. escape hatch!
+		ax,bx= ax-1,bx-1
+		ay,by= -by,-ay
+	end
+  local dx= bx-ax
+  local dy= by-ay
+  local dz= 0 -- bz-az==2-2==0
+  local px= x-ax
+  local py= y-ay
+  local pz= z-2
+
+  local fdot= (dx*px+dy*py+dz*dz)/(dx*dx+dy*dy+dz*dz) -- maths
+	if fdot<0 then fdot= 0 elseif fdot>1 then fdot= 1 end -- inline clamp()
+	
+	local cdx_sq=(px-dx*fdot)^2
+  if cdx_sq>1.4 then return end
+	local cdz_sq=(pz-dz*fdot)^2
+	if cdz_sq>1 then return end
+	local cdy_sq=(py-dy*fdot)^2
+  --if cdy_sq>1 then return end
+	if (cdx_sq+cdy_sq+cdz_sq)^.5 <= 1.5 then 
+		return WHITE
+	end
+--end
+
+-- andxyz-green-toggle® to find help negative space savings
+--return GREEN
+",
+"first_pass": "--first_pass
+--316
+--662.496
+
+-- distance to a line segment is a way of
+-- drawing a capsule by selecting any voxel
+-- where the distance to the line segment is
+-- less than or equal to radius.
+-- ax,ay,az are the first endpoint of the line
+-- bx,by,bz is the second endpoint of the line
+function capsule(ax,ay,az,bx,by,bz,radius)
+
+	-- dx,dy,dz is \"going from a to b\"
+	dx = bx-ax
+	dy = by-ay
+	dz = bz-az
+	
+	-- length of the line seqment
+	length = sqrt(dx*dx+dy*dy+dz*dz)
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	dx = dx / length
+	dy = dy / length
+	dz = dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	px = x - ax
+	py = y - ay
+	pz = z - az
+	
+	-- project p onto the line segment with dot product
+	dot = dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	dot = clamp(dot, 0, length)
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	cx = ax + dx*dot
+	cy = ay + dy*dot
+	cz = az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	cdx = x - cx
+	cdy = y - cy
+	cdz = z - cz
+	
+	distance = sqrt(cdx*cdx+cdy*cdy+cdz*cdz)
+	
+	-- return true if distance is <= radius
+	return distance<=radius
+	
+end
+
+
+
+
+
+-- example capsule going from (3,3,3) to (-3,-3,-3) with a radius
+-- of 4.5
+--return capsule(3,3,3,-3,-3,-3,4.5)
+
+return
+x==-6 and 
+(
+	(y-1.5)^2+(z-2.5)^2<=1 or (y-1.5)^2+(z+2.5)^2<=1
+) and  BLACK
+or
+capsule(-3,0,0,  3,0,0,  4.5)
+or
+capsule(-4,3,2,  -2,6,2,  1.5) or capsule(-4,3,-2,  -2,6,-2,  1.5)
+or
+capsule(-5,-6,2,  -3,-3,2,  1.5) or capsule(-5,-6,-2,  -3,-3,-2,  1.5)
+or
+capsule(5,-6,2,  3,-3,2,  1.5) or capsule(5,-6,-2,  3,-3,-2,  1.5)",
+"s1": "-- s1
+-- 245
+-- 227.364
+
+-- andxyz-debug-toggle® use while working and debugging
+-- to avoid \"perfect match!\"
+--if x==7 and y==7 and z==7 then 
+--	return BLACK
+--end
+
+z= abs(z) -- z-symmetry trick
+old_x= x
+x= abs(x) -- x-symmetry trick for body, feet, ears
+
+function capsule(ax,ay,az,bx,by,bz) -- externalize radius trick	
+	-- chaotic \"y\" greater-than-zero symmetry flip:
+	if y>0 and ax==5 then x= -old_x+1; ay,by = -by,-ay end -- chaotic y>0 symmetry flip
+--	if y>0 and bz==2 then -- ears trick
+--		if old_x>0 then return GREEN end
+--		-- not sure why this needs to be a non-zero color
+--		ax,bx= ax-1,bx-1
+--		ay,by= -by,-ay
+--	end
+	
+	-- dx,dy,dz is \"going from a to b\"
+	dx= bx-ax
+	dy= by-ay
+	dz= bz-az
+	-- length of the line seqment
+	length= sqrt(dx*dx+dy*dy+dz*dz)
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	dx= dx / length
+	dy= dy / length
+	dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	px= x - ax
+	py= y - ay
+	pz= z - az
+	
+	-- project p onto the line segment with dot product
+	dot= dx*px+dy*py+dz*pz
+	
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	dot= clamp(dot, 0, length)
+	
+	-- now find the closest point to the current voxel that is
+	-- *on the line segment*
+	cx= ax + dx*dot
+	cy= ay + dy*dot
+	cz= az + dz*dot
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	cdx= x - cx
+	cdy= y - cy
+	cdz= z - cz
+	
+	-- distance = sqrt(cdx*cdx+cdy*cdy+cdz*cdz)
+	-- return true if distance is <= radius
+	return sqrt(cdx*cdx+cdy*cdy+cdz*cdz)
+end
+
+return
+old_x==-6 and (y-1.5)^2+(z-2.5)^2<=1 and BLACK
+or capsule(-3,0,0,3,0,0) <= 4.5
+or capsule(5,-6,2,3,-3,2) <= 1.5
+",
+"s2": "-- s2
+-- 201
+-- 167.282
+
+-- andxyz-debug-toggle® use while working and debugging
+-- to avoid \"perfect match!\"
+--if x==7 and y==7 and z==7 then 
+--	return BLACK
+--end
+
+z= abs(z) -- z-symmetry trick
+old_x= x
+x= abs(x) -- x-symmetry trick for body, feet, ears
+
+function capsule(ax,ay,az,bx,by,bz)
+  if y>0 and ax==5 then
+    x= 1-old_x
+    ay,by= -by,-ay
+  end
+  dx= bx-ax
+  dy= by-ay
+  dz= bz-az
+  px= x-ax
+  py= y-ay
+  pz= z-az
+
+  fdot= clamp((dx*px+dy*py+dz*dz)/(dx*dx+dy*dy+dz*dz), 0, 1)
+  return sqrt((px-dx*fdot)^2+(py-dy*fdot)^2+(pz-dz*fdot)^2)
+end
+
+return
+old_x==-6 and y<=2 and y>=1 and z>=2 and z<=3 and BLACK
+or capsule(-3,0,0,3,0,0) <= 4.5
+or capsule(5,-6,2,3,-3,2) <= 1.5
+
+
+--[[ For my records, the old capsule function before the maths simplification
+
+function capsule(ax,ay,az,bx,by,bz) -- externalize radius trick	
+	-- chaotic \"y\" greater-than-zero symmetry flip:
+	if y>0 and ax==5 then x= -old_x+1; ay,by = -by,-ay end -- chaotic y>0 symmetry flip
+--	if y>0 and bz==2 then -- ears trick
+--		if old_x>0 then return GREEN end
+--		-- not sure why this needs to be a non-zero color
+--		ax,bx= ax-1,bx-1
+--		ay,by= -by,-ay
+--	end
+	
+	-- dx,dy,dz is \"going from a to b\"
+	dx= bx-ax
+	dy= by-ay
+	dz= bz-az
+	-- length of the line seqment
+	length= sqrt(dx*dx+dy*dy+dz*dz)
+	
+	-- divide so that now dx,dy,dz is a \"unit vector\"
+	-- in the direction of the line segment
+	dx= dx / length
+	dy= dy / length
+	dz= dz / length
+	
+	-- px,py,pz is \"a to current voxel\"
+	px= x-ax
+	py= y-ay
+	pz= z-az
+	
+	-- project p onto the line segment with dot product
+	-- result of this dot product is the length along
+	-- the line segment to the projected point p on the
+	-- line segment.  clamp to a length between 0 and length
+	dot= clamp(dx*px+dy*py+dz*pz, 0, length)
+	
+	-- finally, what is the distance from the current voxel to this
+	-- closest point on the line segment?
+	--cdx= px-dx*dot
+	--cdy= py-dy*dot
+	--cdz= pz-dz*dot
+	
+	-- distance = sqrt(cdx*cdx+cdy*cdy+cdz*cdz)
+	-- return true if distance is <= radius
+	return sqrt((px-dx*dot)^2+(py-dy*dot)^2+(pz-dz*dot)^2)
+end
+--]]
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "baba-is-cube.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["first_pass", "f1", "f1b", "f2", "f3", "f4", "s1", "s2", "f5"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 22.56,
+"code_size": 98,
+"code_variants": {
+"first_pass": "-- first_pass
+-- 98
+-- 22.560
+
+-- she's the allmighty emperor of the void
+-- after nap time
+-- and she will reliquish her power for headpats
+-- :3
+X=abs(x)
+return
+z==y%3+2 and X==1
+or (z<1 and y==1 or y==2 and (z==1 or x==0)) and EMPTY
+or X<=1 and (inrange(z-y,-1,2) or y==0 or y==-1) and BLACK
+or z*2>y and X%3==2 and y%2<=0 and y<=0 and BLACK
+or z+y==-4 and BLACK
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "void-emperor.weekly",
+"size": 2,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"first_pass": "--first_pass
+if z~=-3 then return end
+
+return
+(
+	y<z
+	or 
+	round(2*cos(pi+(abs(x)+1)*pi/4))>=y+z-1
+) and RED
+"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "stepwell.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "code",
+"animated": true,
+"challenge_complete": false,
+"code_variants": {
+"code": "-- This strange waffle has seen too much
+-- 
+-- Waffle: \"Cells Interlinked, Cells Interlinked, Cells Interlinked\"
+-- Interviewer: \"You are wayyy off baseline, strange waffle\"
+
+local function f(x,y,z)
+	return (y==abs(x) or y==abs(z))
+end
+
+return f(x/t,y,z/t) and ({7,8,9,10,11})[clamp(y,1,5)]
+"
+},
+"completed": false,
+"fps": 6,
+"frames": 19,
+"id": "dl-9595.vox",
+"size": 9,
+"source": 300,
+"variant_order": ["code"]
+}, {
+"active_variant": "f1",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 8.11765,
+"code_size": 43,
+"code_variants": {
+"f1": "--f1
+--53
+--8.118
+
+if y>2 or y<-2 then return end -- negative space
+
+-- Note: round() without the function call + .5)//1
+if y==(cos(x*pi/4)+(cos(z*pi/4))+ .5)//1 then
+	return (x*x+z*z)^.5*.8+5.5
+end
+",
+"first_pass": "--first_pass
+--127 
+--8.364
+
+if y>2 or y<-2 then return end -- negative space
+-- Note: round() without the function call + .5)//1
+if y==(cos(x*pi/4)+(cos(z*pi/4))+ .5)//1 then
+	local c= x^2+z^2
+	if c<=0 then return 5 end
+	if c<=2 then return 6 end
+	if c<=9 then return 7 end
+	if c<=18 then return 8 end
+	if c<=29 then return 9 end
+	if c<=45 then return 10 end
+	if c<=65 then return 11 end
+	if c<=85 then return 12 end
+	if c<=100 then return 13 end
+	return 14
+end
+",
+"s1": "--s1
+--43
+--12.353
+
+return 
+abs(y)<=2 
+and  
+y==round(cos(x*pi/4)+(cos(z*pi/4))) 
+and
+(x*x+z*z)^.5*.8+5.5
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "rainbow-waves.weekly",
+"size": 8,
+"source": 400,
+"variant_order": ["first_pass", "s1", "f1"]
+}, {
+"active_variant": "s1",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 5.52041,
+"code_size": 43,
+"code_variants": {
+"first_pass": "--first_pass
+--56
+--5.520
+
+if y>=1 then return end -- negative space
+if y<=-2 then return GREY end -- bottompart
+if t==0 and y==0 then return end -- first_frame early escape
+
+-- the button
+local sq= x*x+z*z
+if sq<=2 then return RED end
+if y==-1 and sq<= 8 then return WHITE end
+",
+"s1": "--s1
+--43
+--11.376
+sq= x*x+z*z
+return
+y<=-2 and GREY
+or 
+t==0 and y==0 and EMPTY
+or
+y<=0 and sq<=2 and RED
+or
+y==-1 and sq<= 8
+",
+"s2try": "--s2try
+--
+-- 
+return cos(x*pi/4)+cos(z*pi/4)>=1.1
+"
+},
+"completed": true,
+"fps": 10,
+"frames": 2,
+"id": "button-masher.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["first_pass", "s1", "s2try"]
+}, {
+"active_variant": "first_pass",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 11.2156,
+"code_size": 163,
+"code_variants": {
+"first_pass": "-- first_pass
+-- 175
+-- 11.216
+
+if x<0 then return end -- negative space
+
+-- unique stuff on x==0 and z==0 
+if x==0 and z==0 then
+	if y==4 then return WHITE end
+	if y<=0 and y>=-2 then
+		if t==0 and y==0 then return WHITE end
+		if t==1 and y==-1 then return WHITE end
+		if t==2 and y==-2 then return WHITE end
+		return
+	end
+end
+
+-- criss cross
+if x==0 and (z==y or z==-y)  
+	or z==0 and (x==y or x==-y) then 
+	return GREY
+end
+
+-- half circle
+local c= (x*x+z*z)^.5
+if (y==5 or y==-5) and c<=5.5 and c>=5 then 
+	return GREY
+end
+
+if y+c/3+3<=0 and c<5.5 then return WHITE end -- bottom sand
+if c<=y and y<4 and c<5.5 then return WHITE end -- top sand
+"
+},
+"completed": true,
+"fps": 5,
+"frames": 3,
+"id": "cutaway-hourglass.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "s3",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 13.0047,
+"code_size": 55,
+"code_variants": {
+"f2": "--f2
+--137
+--13.773
+
+if (x<5 and x>-5) and (
+	  (y<5 and y>-5) or (z<5 and z>-5)
+	) or (y<5 and y>-5) and (z<5 and z>-5) then 
+return end -- negative space, empty tunnels thru middle
+
+if x~=7 and y~=7 and z~=7 and x~=-7 and y~=-7 and z~=-7 
+	then return -- negative space, a point on the line always has a 7 or -7
+end
+ 
+local offset= sign(x+y+z)|1 
+local data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]~=6 or data[3]~=8 then return end
+if data[1]>=5 then
+	return YELLOW else return BLACK
+end
+",
+"f3": "--f3
+--139
+--13.537
+
+if (x<5 and x>-5) and (
+	  (y<5 and y>-5) or (z<5 and z>-5)
+	) or (y<5 and y>-5) and (z<5 and z>-5) then 
+return end -- negative space, empty tunnels thru middle
+
+if x~=7 and y~=7 and z~=7 and x~=-7 and y~=-7 and z~=-7 
+	then return -- negative space, a point on the line always has a 7 or -7
+end
+ 
+local offset= sign(x+y+z)|1 
+local data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]==6 and data[3]==8 then
+	if data[1]>=5 then 
+		return YELLOW else return BLACK
+	end
+end
+",
+"f4": "--f4
+--147
+--13.005
+
+local X= x*x
+local Y= y*y
+local Z= z*z
+if X<=16 and (Y<=16 or Z<=16) or Y<=16 and Z<=16 then return end  -- negative space, empty tunnels thru middle
+if X~=49 and Y~=49 and Z~=49 then return end -- negative space, a point on the line always has a 7 or -7
+if x*y>=36 or x*z>=36 or y*z>=36 then return end -- negative space, the tiny cubes in corners
+
+local offset= sign(x+y+z)|1
+local data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]==6 and data[3]==8 then
+	if data[1]>=5 then
+		return YELLOW else return BLACK
+	end
+end
+",
+"f5": "--f5-inprogress
+--147
+--13.005
+
+local X= x*x
+local Y= y*y
+local Z= z*z
+if X<=16 and (Y<=16 or Z<=16) or Y<=16 and Z<=16 then return end  -- negative space, empty tunnels thru middle
+if X~=49 and Y~=49 and Z~=49 then return end -- negative space, a point on the line always has a 7 or -7
+if x*y>=36 or x*z>=36 or y*z>=36 then return end -- negative space, the tiny cubes in corners
+
+local offset= sign(x+y+z)|1
+-- this was slower
+--local d1= x+offset
+--local d2= y+offset
+--local d3= z+offset
+--if d1<0 then d1=-d1 end
+--if d2<0 then d2=-d2 end
+--if d3<0 then d3=-d3 end
+--local data= {d1,d2,d3}
+local data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]==6 and data[3]==8 then
+	if data[1]>=5 then
+		return YELLOW else return BLACK
+	end
+end
+",
+"s1": "--s1
+--58
+--34.211
+
+offset= sign(x+y+z)|1
+data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+return
+(data[2]==6 and data[3]==8)
+and (data[1]>=5 and YELLOW or BLACK)
+",
+"s2": "--s2
+--56
+--35.783
+
+offset= sign(x+y+z)|1
+data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]|data[3]==14 then -- union of 6 and 8
+	return data[1]>=5 and YELLOW or BLACK
+end",
+"s3": "--s3
+--55
+--36.767
+
+offset= sign(x+y+z)|1
+data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+return 
+data[2]|data[3]==14 -- union of 6 and 8
+and (data[1]>=5 and YELLOW or BLACK)"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "another-wired-cube.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["s1", "s2", "s3", "f2", "f3", "f4", "f5"]
+}, {
+"active_variant": "f2",
+"animated": true,
+"challenge_complete": false,
+"code_instructions": 7.58002,
+"code_size": 130,
+"code_variants": {
+"f1": "--f1
+--163
+--7.768
+
+if z>2 or z<-2 then return end
+if x>3 or x<-3 then return end
+if y>1 and z~=0 then return end
+
+-- lock u-shape
+if z==0 and floor(x^2/4+y^2/22-1)==0 then
+	if y<=-1 then
+		if x>0 and y~=-5 then 
+			return GREY 
+		else 
+			return YELLOW
+		end
+	end
+	return GREY
+end
+
+-- combinations
+if x>=1 and x<=3 and z<=1 and z>=-1 then
+	if y==0 or y==-2 or y==-4 then
+		if y==-2 then
+			z=z+1
+		end
+		return (z+x+t)%2==1 and GREY or BLACK
+	end
+end
+
+-- lock body
+if y<=1 and x^2/15+z^2/8-1<=0 then
+	return YELLOW
+end
+",
+"f2": "--f2
+--162
+--7.580
+
+if z>2 or z<-2 then return end
+local X= x*x
+if X>9 then return end
+if y>1 and z~=0 then return end
+
+-- lock u-shape
+if z==0 and (X/4+y^2/22-1)//1==0 then
+	if y<=-1 then
+		if x>0 and y~=-5 then 
+			return GREY 
+		else 
+			return YELLOW
+		end
+	end
+	return GREY
+end
+
+-- combinations
+if x>=1 and x<=3 and z<=1 and z>=-1 then
+	if y==0 or y==-2 or y==-4 then
+		if y==-2 then z= z+1 end
+		return (z+x+t)%2==1 and GREY or BLACK
+	end
+end
+
+-- lock body
+if y<=1 and X/15+z^2/8-1<=0 then
+	return YELLOW
+end
+",
+"firstr_pass": "--first_pass
+--141
+--8.598
+
+if z>2 or z<-2 then return end
+
+-- lock u-shape
+if z==0 and y>=-4 and floor(x^2/4+y^2/22-1)==0 then
+	if y<=-1 then
+		if x>0 then return GREY else return YELLOW end
+	end
+	return GREY
+end
+
+-- combinations
+if x>=1 and x<=3 and z<=1 and z>=-1 then
+	if y==0 or y==-2 or y==-4 then
+		if y==-2 then
+			z=z+1
+		end
+		return (z+x+t)%2==1 and GREY or BLACK
+	end
+end
+
+-- lock body
+if y<=1 and x^2/15+z^2/8-1<=0 then
+	return YELLOW
+end
+"
+},
+"completed": true,
+"fps": 2,
+"frames": 2,
+"id": "combo-lock.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["firstr_pass", "f1", "f2"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "return 1"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "tv-head.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"first_pass": "
+if y==-11 then return DARKBLUE end
+
+local X=abs(x)
+local Z=abs(z)
+if X==-y+9 and Z==-y+9 
+	or -X==-y-13 and -Z==-y-13 then 
+	return (y+2)//4+7
+end
+"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "colored-beams.weekly",
+"size": 11,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "s3",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 15.6676,
+"code_size": 41,
+"code_variants": {
+"f1": "--f1
+--93
+--20.420
+local x= abs(x)
+local y= abs(y)
+local z= abs(z)
+if x==y and z==y then return BLACK end
+if z==0 and x==y then return BLACK end
+if y==0 and x==z then return BLACK end
+if x==0 and y==z then return BLACK end
+if x==-y then return BLACK end
+if y==-z then return BLACK end
+if x==-z then return BLACK end
+",
+"f2": "--f2
+--105
+--15.668
+
+if x<0 then x=-x end
+if y<0 then y=-y end
+if z==0 and x==y then return BLACK end
+if z<0 then z=-z end
+if x==y and z==y then return BLACK end
+if y==0 and x==z then return BLACK end
+if x==0 and y==z then return BLACK end
+if x==-y then return BLACK end
+if y==-z then return BLACK end
+if x==-z then return BLACK end
+",
+"first_pass": "--first_pass
+--73
+--30.641
+
+return 
+(
+x*x==y*y and z*z==y*y 
+or x|y==0 
+or y|z==0 
+or x|z==0
+or abs(x)==abs(y) and z==0
+or abs(z)==abs(y) and x==0
+or abs(x)==abs(z) and y==0
+) and BLACK",
+"s1": "--s1
+--68
+--24.997
+x=abs(x)
+y=abs(y)
+z=abs(z)
+return
+(
+x==y and z==y
+or x|y==0 
+or y|z==0 
+or x|z==0
+or x==y and z==0
+or x==z and y==0
+or y==z and x==0
+) and BLACK
+",
+"s2": "--s1
+--65
+--24.420
+x= abs(x)
+y= abs(y)
+z= abs(z)
+return
+(
+x==y and z==y
+or z==0 and x==y
+or y==0 and x==z 
+or x==0 and y==z
+or x==-y 
+or y==-z
+or x==-z
+ 
+) and BLACK
+",
+"s3": "--s3
+--41
+--24.924
+
+function f(u,v)
+	return
+		u*u==v*v
+		or u*v==0
+end
+return
+    f(x,y)
+and f(y,z)
+and f(z,x)
+and BLACK
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "urchin.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["first_pass", "s1", "s2", "s3", "f1", "f2"]
+}, {
+"active_variant": "s3",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 13.0047,
+"code_size": 55,
+"code_variants": {
+"f5": "--f5-inprogress
+--147
+--13.005
+
+local X= x*x
+local Y= y*y
+local Z= z*z
+if X<=16 and (Y<=16 or Z<=16) or Y<=16 and Z<=16 then return end  -- negative space, empty tunnels thru middle
+if X~=49 and Y~=49 and Z~=49 then return end -- negative space, a point on the line always has a 7 or -7
+if x*y>=36 or x*z>=36 or y*z>=36 then return end -- negative space, the tiny cubes in corners
+
+local offset= sign(x+y+z)|1
+-- this was slower
+--local d1= x+offset
+--local d2= y+offset
+--local d3= z+offset
+--if d1<0 then d1=-d1 end
+--if d2<0 then d2=-d2 end
+--if d3<0 then d3=-d3 end
+--local data= {d1,d2,d3}
+local data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+if data[2]==6 and data[3]==8 then
+	if data[1]>=5 then
+		return YELLOW else return BLACK
+	end
+end
+",
+"s3": "--s3
+--55
+--36.767
+
+offset= sign(x+y+z)|1
+data= {abs(x+offset),abs(y+offset),abs(z+offset)}
+sort(data)
+
+return 
+data[2]|data[3]==14 -- union of 6 and 8
+and (data[1]>=5 and YELLOW or BLACK)"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "wired-cube.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["s3", "f5"]
+}, {
+"active_variant": "f1",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 20.5019,
+"code_size": 116,
+"code_variants": {
+"f1": "-- f1
+-- 116
+-- 20.502
+
+-- Break the ground!
+local shape= 6*exp((-x^2-z^2)/64)
+if y-1>=shape then return end
+
+local xyz= x+y+z
+if xyz>0 then
+	if y+4>=shape then return end
+	local cindex= y//2+5
+	if cindex>2 then
+		return GREEN else return ({16,15,11,11,11})[cindex]
+	end
+end
+local cindex= (y+1)//2+5
+if cindex>5 then
+	return GREEN else return ({3,2,1,16,15})[cindex]
+end
+",
+"first_pass": "-- first_pass
+-- 137
+-- 23.927
+
+-- Break the ground!
+local xyz= x+y+z
+local shape= 6*exp((-x^2-z^2)/64)
+
+if xyz>0 then
+	local mound= y+4 < shape
+	if mound then
+		local cindex= y//2+5
+		if cindex>2 then
+			return GREEN else return ({16,15,11,11,11})[cindex]
+		end
+	end
+else
+	local mound= y-1 < shape
+		if mound then
+			local cindex= (y+1)//2+5
+			if cindex>5 then
+				return GREEN else return ({3,2,1,16,15})[cindex]
+			end
+	end
+end
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "fault.weekly",
+"size": 8,
+"source": 400,
+"variant_order": ["first_pass", "f1"]
+}, {
+"active_variant": "first_pass",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 7.0586,
+"code_size": 109,
+"code_variants": {
+"first_pass": "-- first_pass
+if x>3 or x<-3 then return end
+if z>1 or z<-3 then return end
+if z==-3 then return BROWN end
+if y%5==0 then return BROWN end
+if x==3 or x==-3 then return BROWN end
+if z==1 then return end
+if y==4 or y==-1 then return end
+if y>0 then
+	return ({3,1,4,1,5})[x+3]
+else
+	return ({9,2,6,5,3})[x+3]
+end
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "bookshelf.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["first_pass"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "return abs(x+sin(z))<=2"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "bamboo-path.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "h-fractal.weekly",
+"size": 13,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "chick.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "return 1"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "compact-02.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "-- Make sure you're looking inside the bowl!
+-- I would recommend looking from the top down
+-- instead of inward from the side."
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "ramen.weekly",
+"size": 6,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "-- I remember building these towers when I was a child.
+-- The tower in the +Z -X quandrant is more complex because I had to put the pillars in different orientations so that the tower is more robust to constaints in all directions.
+
+if y==-16 then 
+	return LIGHTBLUE
+end
+
+if x//3==0 and y==-15 and z//10==0 then return PINK end
+if (x+4)//10==0 and y==-15 and (z+4)//3==0 then return PEACH end
+if (x+4)//1==0 and (y+15)//3==0 and (z-1)//10==0 then return GREEN end
+if (x-8)//1==0 and (y+15)//10==0 and (z-8)//3==0 then return YELLOW end
+
+pos_x = 6
+pos_y = -15
+pos_z = 0
+
+-- to have different orientations you can change which axis gets which size in the list [1, 3, 10]
+size_x = 10
+size_y = 3
+size_z = 1
+if (x-pos_x)//size_x==0 
+	 and (y-pos_y)//size_y==0
+	 and (z-pos_z)//size_z==0 then
+	
+	return DARKBLUE
+end"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "wooden-towers.weekly",
+"size": 16,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": true,
+"challenge_complete": false,
+"code_variants": {
+"code": "-- This strange waffle has seen too much
+-- 
+-- Waffle: \"Cells Interlinked, Cells Interlinked, Cells Interlinked\"
+-- Interviewer: \"You are wayyy off baseline strange waffle\"
+
+local function f(x,y,z)
+	return (y==abs(x) or y==abs(z))
+end
+
+return f(x/t,y,z/t) and ({7,8,9,10,11})[clamp(y,1,5)]
+"
+},
+"completed": false,
+"fps": 6,
+"frames": 19,
+"id": "strange-waffle.weekly",
+"size": 9,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": true,
+"challenge_complete": false,
+"code_variants": {
+"code": "-- Which way is North?
+if y == 0 and x^2 + z^2 < 5^2 then
+
+	if t == 3 then t = 1 end
+	if x == t - 1 then return GREY end
+	
+	return WHITE
+	
+end
+"
+},
+"completed": false,
+"fps": 2,
+"frames": 4,
+"id": "compass2.weekly",
+"size": 5,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "tri-triskelion.weekly",
+"size": 3,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "lattice-tower.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": ""
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "benzene.weekly",
+"size": 4,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "code",
+"animated": false,
+"challenge_complete": false,
+"code_variants": {
+"code": "return round(sqrt(x^2+y^2+z^2))<=8"
+},
+"completed": false,
+"fps": 12,
+"frames": 1,
+"id": "stupa.weekly",
+"size": 14,
+"source": 400,
+"variant_order": ["code"]
+}, {
+"active_variant": "s1",
+"animated": false,
+"challenge_complete": false,
+"code_instructions": 11.123,
+"code_size": 53,
+"code_variants": {
+"f1": "-- f1 -- manual approach with if statements
+-- 252
+-- 11.123
+
+local Y= y/2
+if Y<=-3 then -- L1
+	if x<7 and z<7 then
+		return (x+1.5)*(z+1.5)%2+2
+	end
+elseif Y<=-2 then -- L2
+	if x<6 and x>-7 and z<6 and z>-7 then
+		return (x+.5)*(z+.5)%2+2
+	end
+elseif Y<=-1 then -- L3
+	if x<5 and x>-6 and z<5 and z>-6 then
+		return (x+1.5)*(z+1.5)%2+2
+	end
+elseif Y<=0 then -- L4
+	if x<4 and x>-5 and z<4 and z>-5 then
+		return (x+.5)*(z+.5)%2+2
+	end
+elseif Y<=1 then -- L5
+	if x<3 and x>-4 and z<3 and z>-4 then
+		return (x+1.5)*(z+1.5)%2+2
+	end
+elseif Y<=2 then -- L6
+	if x<2 and x>-3 and z<2 and z>-3 then
+		return (x+.5)*(z+.5)%2+2
+	end
+elseif Y<=3 then -- L7
+	if x<1 and x>-2 and z<1 and z>-2 then
+		return 2 
+	end
+end
+",
+"f2": "-- f2 -- math with pyramid and offset math for pattern
+-- 57
+-- 16.982
+
+local max_xz= max((x+.5)^2, (z+.5)^2)
+if max_xz^.5 + y/2 < 4 then 
+	local offset=  floor((y+1)/2)%2
+	return 
+	(x+.5+offset)*(z+.5+offset)%2 + 2
+end
+
+
+--local t= {(x+.5)^2, (z+.5)^2} sort(t)
+--if t[2]^.5 + y/2 < 4 then 
+--	local offset=  floor((y+1)/2)%2
+--	return 
+--	(x+.5+offset)*(z+.5+offset)%2 + 2
+--end
+--",
+"f3": "-- f3 -- pyramid math + pattern offset math
+-- 59
+-- 15.319
+
+local max_xz= max((x+.5)^2, (z+.5)^2)
+if max_xz^.5 + y/2 < 4 then 
+	local offset= (y+1)/2//1%2+.5
+	return 
+	(x+offset)*(z+offset)%2 + 2
+end
+
+--local t= {(x+.5)^2, (z+.5)^2} sort(t)
+--if t[2]^.5 + y/2 < 4 then 
+--	local offset=  floor((y+1)/2)%2
+--	return 
+--	(x+.5+offset)*(z+.5+offset)%2 + 2
+--end
+--",
+"first_pass": "-- first_pass
+-- 214
+-- 17.060
+
+local Y= y/2
+local X=(x+.5)^2
+local Z=(z+.5)^2
+if Y<=-3 and X<49 and Z<49 then
+	return (x+1.5)*(z+1.5)%2+2
+elseif Y<=-2 and X<36 and Z<36 then
+	return (x+.5)*(z+.5)%2+2
+elseif Y<=-1 and X<25 and Z<25 then
+	return (x+1.5)*(z+1.5)%2+2
+elseif Y<=0 and X<16 and Z<16 then
+	return (x+.5)*(z+.5)%2+2
+elseif Y<=1 and X<9 and Z<9 then
+	return (x+1.5)*(z+1.5)%2+2
+elseif Y<=2 and X<4 and Z<4 then
+	return (x+.5)*(z+.5)%2+2
+elseif Y<=3 and X<1 and Z<1 then
+	return 2
+end
+",
+"s1": "-- s1 -- pyramid math + pattern offset math
+-- 53
+-- 19.314
+
+max_xz= max(abs(x+.5), abs(z+.5))
+if max_xz + y/2 < 4 then 
+	offset= (y+1)/2//1%2+.5
+	return 
+	(x+offset)*(z+offset)%2 + 2
+end
+"
+},
+"completed": true,
+"fps": 12,
+"frames": 1,
+"id": "checker-pyramid.weekly",
+"size": 7,
+"source": 400,
+"variant_order": ["first_pass", "f1", "f2", "f3", "s1"]
 }]
-latest_weekly="pascals-triangle.weekly"
+latest_weekly="checker-pyramid.weekly"
