@@ -236,12 +236,13 @@ impl<'a> DataParser<'a> {
             return Err(anyhow!("expected '\"' at pos {}", self.pos));
         }
         self.pos += 1;
-        let mut s = String::new();
+        let mut s_bytes = Vec::new();
         while self.pos < bytes.len() {
             let c = bytes[self.pos];
             if c == b'"' {
                 self.pos += 1;
-                return Ok(s);
+                return String::from_utf8(s_bytes)
+                    .with_context(|| "invalid utf-8 in parsed string");
             }
             if c == b'\\' {
                 self.pos += 1;
@@ -250,19 +251,19 @@ impl<'a> DataParser<'a> {
                 }
                 let esc = bytes[self.pos];
                 match esc {
-                    b'"' => s.push('"'),
-                    b'\\' => s.push('\\'),
-                    b'n' => s.push('\n'),
-                    b'r' => s.push('\r'),
-                    b't' => s.push('\t'),
+                    b'"' => s_bytes.push(b'"'),
+                    b'\\' => s_bytes.push(b'\\'),
+                    b'n' => s_bytes.push(b'\n'),
+                    b'r' => s_bytes.push(b'\r'),
+                    b't' => s_bytes.push(b'\t'),
                     _ => {
-                        s.push('\\');
-                        s.push(esc as char);
+                        s_bytes.push(b'\\');
+                        s_bytes.push(esc);
                     }
                 }
                 self.pos += 1;
             } else {
-                s.push(c as char);
+                s_bytes.push(c);
                 self.pos += 1;
             }
         }
@@ -421,6 +422,9 @@ mod tests {
 
         let mut parser = DataParser::new(r#""a\\b""#);
         assert_eq!(parser.parse_string().unwrap(), r#"a\b"#);
+
+        let mut parser = DataParser::new(r#""andxyz-debug-toggle®""#);
+        assert_eq!(parser.parse_string().unwrap(), "andxyz-debug-toggle®");
     }
 
     #[test]
